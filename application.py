@@ -1,3 +1,6 @@
+from EC2 import EC2Instance
+from Connections import Connection
+
 
 class Application:
 
@@ -108,7 +111,14 @@ class Application:
 
         # AWS - List all running instances
         if action == 111:
-            self.place_holder()
+            # New connection object
+            con_object = Connection()
+
+            # New connection to EC2
+            conn_ec2 = con_object.ec2_connection()
+
+            # List All
+            EC2Instance.list_instances(conn_ec2)
 
         # AWS - List some of the running instances - Choose from list
         elif action == 1121:
@@ -206,6 +216,8 @@ class Application:
         elif action == 32:
             self.place_holder()
 
+        print "\n--------- Action completed ---------\n"
+
         print "\n------------ Restarting ------------\n"
         self.process_selection(0)
 
@@ -222,7 +234,7 @@ class Application:
 
         while not valid:
             try:
-                option = int(raw_input("Select option: "))
+                option = int(raw_input("\nSelect option: "))
                 if 1 <= option <= max_val:
                     valid = True
             except ValueError:
