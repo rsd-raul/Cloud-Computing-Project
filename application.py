@@ -103,9 +103,115 @@ class Application:
 
     # -------------------------------------------------- ACTIONS -------------------------------------------------
 
-    def apply_action(self, action_id):
-        print "Action to apply: %d" % action_id
+    def apply_action(self, action):
+        print "\n---------- Starting action ---------\n"
+
+        # AWS - List all running instances
+        if action == 111:
+            self.place_holder()
+
+        # AWS - List some of the running instances - Choose from list
+        elif action == 1121:
+            self.place_holder()
+
+        # AWS - List some of the running instances - Enter an instance ID
+        elif action == 1122:
+            self.place_holder()
+
+        # AWS - Start a new instance based on an existing AMI
+        elif action == 113:
+            self.place_holder()
+
+        # AWS - Stop all instances
+        elif action == 114:
+            self.place_holder()
+
+        # AWS - Stop a specific instance
+        elif action == 115:
+            self.place_holder()
+
+        # AWS - Attach an existing volume to an instance
+        elif action == 116:
+            self.place_holder()
+
+        # AWS - Detach a volume from an instance
+        elif action == 117:
+            self.place_holder()
+
+        # AWS - Launch a new instance - Windows instance
+        elif action == 1181:
+            self.place_holder()
+
+        # AWS - Launch a new instance - Linux instance
+        elif action == 1182:
+            self.place_holder()
+
+        # OS - List all running instances
+        elif action == 121:
+            self.place_holder()
+
+        # AWS - List all buckets
+        elif action == 211:
+            self.place_holder()
+
+        # AWS - List all objects in a bucket - Choose from list
+        elif action == 2121:
+            self.place_holder()
+
+        # AWS - List all objects in a bucket - Enter a bucket name
+        elif action == 2122:
+            self.place_holder()
+
+        # AWS - Upload an object
+        elif action == 213:
+            self.place_holder()
+
+        # AWS - Download an object
+        elif action == 214:
+            self.place_holder()
+
+        # AWS - Delete an object
+        elif action == 215:
+            self.place_holder()
+
+        # OS - List all buckets
+        elif action == 221:
+            self.place_holder()
+
+        # OS - List all objects in a bucket - Choose from list
+        elif action == 2221:
+            self.place_holder()
+
+        # OS - List all objects in a bucket - Enter a bucket name
+        elif action == 2222:
+            self.place_holder()
+
+        # OS - Upload an object
+        elif action == 223:
+            self.place_holder()
+
+        # OS - Download an object
+        elif action == 224:
+            self.place_holder()
+
+        # OS - Delete an object
+        elif action == 225:
+            self.place_holder()
+
+        # Performance metrics for a EC2 instance
+        elif action == 31:
+            self.place_holder()
+
+        # Set an alarm
+        elif action == 32:
+            self.place_holder()
+
+        print "\n------------ Restarting ------------\n"
         self.process_selection(0)
+
+    @staticmethod
+    def place_holder():
+        print "placeholder"
 
     # ------------------------------------------------ USER INPUT ------------------------------------------------
 
