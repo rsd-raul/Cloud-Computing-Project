@@ -64,6 +64,9 @@ class Application:
             'restart': "\n------------ Restarting ------------\n",
             'attached': "---------- Volume attached ---------\n",
             'detached': "---------- Volume detached ---------\n",
+            'stored': "------------ File stored -----------",
+            'removed': "------------ File removed ----------",
+            'downloaded': "---------- File downloaded ---------",
             'completed': "\n\\-------- Action completed --------/\n"
         }
         # Initialize app with main menu
@@ -352,7 +355,7 @@ class Application:
             if buckets:
                 print "Current AWS S3 Buckets:"
                 for b in buckets:
-                    print "\n", b.name
+                    print "\n\t", b.name
             else:
                 print self.app_strings['no_found']
 
@@ -374,7 +377,9 @@ class Application:
                 bucket_objects = buckets[bucket_num - 1].list()
                 if bucket_objects:
                     for bucket_object in bucket_objects:
-                        print bucket_object
+                        print '\t' + str(bucket_object.key)
+                else:
+                    print self.app_strings['no_found']
 
         # AWS - List all objects in a bucket - Enter a bucket name
         elif action == 2122:
@@ -392,15 +397,43 @@ class Application:
                 for bucket in buckets:
                     if bucket.name == bucket_name:
                         success = True
-                        for bucket_object in bucket.list():
-                            print bucket_object
+                        bucket_objects = bucket.list()
+                        for bucket_object in bucket_objects:
+                            print '\t' + str(bucket_object.key)
 
+                        # If there are no files, warn the user
+                        if not bucket_objects:
+                            print self.app_strings['no_found']
+
+                # If there is no bucket with that name, warn the user
                 if not success:
                     print self.app_strings['no_found']
 
         # AWS - Upload an object
         elif action == 213:
-            self.place_holder()
+            # Start a S3 connection
+            conn_s3 = Connection.s3_connection()
+
+            buckets = S3Bucket.list_buckets(conn_s3)
+            if buckets:
+                # Show and ask for the bucket
+                print "Current AWS S3 Buckets:"
+                for index, bucket in enumerate(buckets, 1):
+                    print '\t', str(index) + ":", bucket.name
+
+                print "\nType the number of the Bucket"
+                bucket_num = self.ask_option(len(buckets))
+
+                bucket = buckets[bucket_num - 1]
+
+                print "Type the identifier of the file"
+                file_title = self.ask_string()
+
+                print "Type the location of the file"
+                file_location = self.ask_string()
+
+                S3Bucket.store_in_bucket(bucket, file_title, file_location)
+                print self.app_strings['stored']
 
         # AWS - Download an object
         elif action == 214:

@@ -24,25 +24,11 @@ class S3Bucket:
         conn.delete_bucket(bucket_title)
 
     @staticmethod
-    def store_in_bucket(conn, bucket_title, file_title, file_location):
+    def store_in_bucket(bucket, file_title, file_location):
         """ Store a file inside a Bucket """
-        buckets = conn.get_all_buckets()
-        for bucket in buckets:
-            if bucket.name == bucket_title:
-                k = Key(bucket)
-                # k.key = 'myfile'
-                # k.set_contents_from_filename('test_file.txt')
-                k.key = file_title
-                k.set_contents_from_filename(file_location)
 
-    @staticmethod
-    def list_objects_bucket(conn, bucket_title):
-        """ Store a file inside a Bucket """
-        buckets = conn.get_all_buckets()
-        for bucket in buckets:
-            if bucket.name == bucket_title:
-                k = Key(bucket)
-                # k.key = 'myfile'
-                # k.set_contents_from_filename('test_file.txt')
-                k.key = file_title
-                k.set_contents_from_filename(file_location)
+        k = Key(bucket)
+        # k.key = 'testing.txt'
+        # k.set_contents_from_filename('res/text.txt')
+        k.key = file_title
+        k.set_contents_from_filename(file_location)
