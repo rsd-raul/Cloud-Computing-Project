@@ -53,8 +53,8 @@ class Application:
     def show_menu(self, key):
         menu = self.menuString[key]
 
-        for index in range(0, len(menu), 1):
-            print ('%d %s' % (index+1, menu[index]))
+        for index, value in enumerate(menu, 1):
+            print index, value
 
         if key != '0':
             print ('%s Go back' % (len(menu)+1))
@@ -102,27 +102,60 @@ class Application:
 
         # If is not a "Go back" or an action, don't request input
         if input_needed:
-            self.process_selection((action*10) + Application.ask_for_option(max_val))
+            self.process_selection((action*10) + Application.ask_option(max_val))
 
     # -------------------------------------------------- ACTIONS -------------------------------------------------
 
     def apply_action(self, action):
-        print "\n---------- Starting action ---------\n"
+        print "\n/--------- Starting action --------\\\n"
 
         # AWS - List all running instances
         if action == 111:
-            # New connection object
-            con_object = Connection()
-
-            # New connection to EC2
-            conn_ec2 = con_object.ec2_connection()
+            # Start a EC2 connection
+            conn_ec2 = Connection().ec2_connection()
 
             # List All
-            EC2Instance.list_instances(conn_ec2)
+            instances = EC2Instance.find_instances_running(conn_ec2)
+
+            if not instances:
+                print "---------- Nothing running ---------"
+            else:
+                # Format and print the requested information
+                print "Running AWS EC2 instances"
+                for index, instance in enumerate(instances):
+                    print index, ':', instance.id, '-', instance.instance_type, '<', instance.region, \
+                        '>: <Running since:', instance.launch_time, '>'
 
         # AWS - List some of the running instances - Choose from list
         elif action == 1121:
-            self.place_holder()
+            # Start a EC2 connection
+            conn_ec2 = Connection().ec2_connection()
+
+            # Retrieve all actives
+            instances = EC2Instance.find_instances_running(conn_ec2)
+
+            # If none, exit
+            if not instances:
+                print "---------- Nothing running ---------"
+            else:
+                # Show index and id for the user to select the desired ones
+                print "Running AWS EC2 instances"
+                for index, instance in enumerate(instances, 1):
+                    print index, ':', instance.id
+
+                # Ask for the desired instances
+                print "Type the number/s (separated by spaces)"
+                numbers = self.ask_multiple_options(len(instances))
+
+                # If the user typed 0, exit
+                if len(numbers) == 1 and numbers[0] == 0:
+                    print "--------- Nothing selected ---------"
+                # Else, format and print
+                else:
+                    for index in numbers:
+                        instance = instances[index]
+                        print index, ':', instance.id, '-', instance.instance_type, '<', instance.region, \
+                            '>: <Running since:', instance.launch_time, '>'
 
         # AWS - List some of the running instances - Enter an instance ID
         elif action == 1122:
@@ -216,7 +249,7 @@ class Application:
         elif action == 32:
             self.place_holder()
 
-        print "\n--------- Action completed ---------\n"
+        print "\n\\-------- Action completed --------/\n"
 
         print "\n------------ Restarting ------------\n"
         self.process_selection(0)
@@ -228,16 +261,41 @@ class Application:
     # ------------------------------------------------ USER INPUT ------------------------------------------------
 
     @staticmethod
-    def ask_for_option(max_val):
+    def ask_option(max_val):
         valid = False
         option = -1
 
         while not valid:
             try:
-                option = int(raw_input("\nSelect option: "))
+                option = int(raw_input("Select option: "))
                 if 1 <= option <= max_val:
                     valid = True
             except ValueError:
                 valid = False
 
+        print
         return option
+
+    @staticmethod
+    def ask_multiple_options(max_val):
+        valid = False
+        result = []
+
+        while not valid:
+            result = []
+
+            try:
+                list_string = (raw_input("Select option: ")).split (' ')
+                if 0 <= len(list_string) <= max_val:
+                    valid = True
+                    for aux in list_string:
+                        value = int(aux)
+                        result.append(value-1)
+                        if value > max_val:
+                            raise ValueError('number must be lower/equal to the max index')
+
+            except ValueError:
+                valid = False
+
+        print
+        return result

@@ -5,6 +5,27 @@ class EC2Instance:
         """ Empty EC2Instance Constructor """
 
     @staticmethod
+    def find_instances_running(conn):
+        """ Find EC2 Instances """
+
+        # Get all instance reservations associated with this AWS account
+        reservations = conn.get_all_reservations()
+
+        # For each reservation retrieve the instances and save them
+        result = [(inst if inst.state == u'running' else None for inst in res.instances) for res in reservations]
+
+        # result = []
+        # [result.append(instance for instance in res.instances) for res in reservations]
+
+        # result = []
+        # for res in reservations:
+        #     for instance in res.instances:
+        #         if instance.state == u'running':
+        #             result.append(instance)
+
+        return result
+
+    @staticmethod
     def list_instances(conn):
         """ List EC2 Instances """
 
