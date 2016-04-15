@@ -62,6 +62,15 @@ class EC2Instance:
         conn.run_instances(ami, key_name="rsd_raul_cit_aws_key", instance_type="t2.micro")
 
     @staticmethod
+    def create_instance_with_so(conn, so):
+        """ Create a new instance based on AMI"""
+
+        # Select the AMI corresponding with Windows or Linux depending on the user
+        ami = "ami-c6972fb5" if so == "windows" else "ami-f95ef58a"
+
+        conn.run_instances(ami, key_name="rsd_raul_cit_aws_key", instance_type="t2.micro")
+
+    @staticmethod
     def start_instance(conn, instance_id):
         """ Starts a stopped instance """
 

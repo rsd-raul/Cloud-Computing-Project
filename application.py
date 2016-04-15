@@ -235,13 +235,17 @@ class Application:
         elif action == 117:
             self.place_holder()
 
-        # AWS - Launch a new instance - Windows instance
-        elif action == 1181:
-            self.place_holder()
+        # AWS - Launch a new instance - Windows instance / Linux instance
+        elif action == 1181 or action == 1182:
+            # Start a EC2 connection
+            conn_ec2 = Connection().ec2_connection()
 
-        # AWS - Launch a new instance - Linux instance
-        elif action == 1182:
-            self.place_holder()
+            so = "windows" if action == 1181 else "linux"
+
+            # Stop the running instance
+            EC2Instance.create_instance_with_so(conn_ec2, so)
+
+            print self.app_strings['created']
 
         # OS - List all running instances
         elif action == 121:
