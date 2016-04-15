@@ -1,5 +1,6 @@
 from boto import exception
 
+
 class EC2Instance:
 
     def __init__(self):
@@ -12,16 +13,22 @@ class EC2Instance:
         # Get all instance reservations associated with this AWS account
         reservations = conn.get_all_reservations()
 
-        # For each reservation retrieve the instances and save them
-        # result = [(inst if inst.state == u'running' else None for inst in res.instances) for res in reservations]
-
-        # result = []
-        # [result.append(instance for instance in res.instances) for res in reservations]
-
         result = []
         for res in reservations:
             for instance in res.instances:
                 if instance.state == u'running':
+                    result.append(instance)
+
+        return result
+
+    @staticmethod
+    def find_instances_running_zone(conn, zone):
+        """ Find EC2 Instances """
+
+        result = []
+        for res in conn.get_all_reservations():
+            for instance in res.instances:
+                if instance.state == u'running' and instance.placement == zone:
                     result.append(instance)
 
         return result

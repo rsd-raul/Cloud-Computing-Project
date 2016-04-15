@@ -1,5 +1,8 @@
 from EC2 import EC2Instance
 from Connections import Connection
+from Volumes import Volumes
+from time import sleep
+import webbrowser
 
 
 class Application:
@@ -24,7 +27,8 @@ class Application:
                 "Stop a specific instance",
                 "Attach an existing volume to an instance",
                 "Detach a volume from an instance",
-                "Launch a new instance"],
+                "Launch a new instance",
+                "Create a new volume"],
             '1-1-2': [
                 "Choose from list",
                 "Enter an instance ID"],
@@ -51,10 +55,13 @@ class Application:
             'no_running': "---------- Nothing running ---------",
             'no_selected': "--------- Nothing selected ---------",
             'created': "--------- Instance created ---------",
+            'created_vol': "---------- Volume created ----------",
             'selected': "-------- Instances selected --------\n",
             'terminating': "------ Terminating everything ------",
             'terminated': "\n------------- Good Bye -------------\n",
-            'restart':    "\n------------ Restarting ------------\n",
+            'restart': "\n------------ Restarting ------------\n",
+            'attached': "---------- Volume attached ---------\n",
+            'detached': "---------- Volume detached ---------\n",
             'completed': "\n\\-------- Action completed --------/\n"
         }
         # Initialize app with main menu
@@ -85,7 +92,7 @@ class Application:
             self.show_menu('12')
         elif action == 11:
             self.show_menu('1-1')
-            max_val = 9
+            max_val = 10
         elif action == 112:
             self.show_menu('1-1-2')
         elif action == 118:
@@ -102,7 +109,7 @@ class Application:
             self.show_menu('3')
 
         # Go back options
-        elif action == 13 or action == 119 or action == 1123 or action == 1183 \
+        elif action == 13 or action == 120 or action == 1123 or action == 1183 \
                 or action == 122 or action == 216 or action == 2123 or action == 226 \
                 or action == 2223 or action == 23 or action == 33:
             self.process_selection(action // 100)
@@ -130,7 +137,18 @@ class Application:
             conn_ec2 = Connection().ec2_connection()
 
             # Terminate all instances
+            print "\nTerminating instances:\n"
             EC2Instance.terminate_all_instances(conn_ec2)
+
+            # Terminate all volumes (wait for instances to detach its volumes)
+            print "\nTerminating volumes:\n"
+            sleep(7)
+            Volumes.delete_all_volumes(conn_ec2)
+
+            # Redirect to check, just in case
+            print "Redirecting to amazon in 5 seconds, check manually!"
+            sleep(5)
+            webbrowser.open('https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#')
 
         # AWS - List all running instances
         elif action == 111:
@@ -227,13 +245,85 @@ class Application:
             # Stop the running instance
             EC2Instance.stop_instance(conn_ec2, instance_id)
 
+        # AWS - Create a new volume
+        elif action == 119:
+            # Start a EC2 connection
+            conn_ec2 = Connection().ec2_connection()
+
+            # Create the new volume
+            success = Volumes.create_volume(conn_ec2)
+            if success:
+                print self.app_strings['created_vol']
+
         # AWS - Attach an existing volume to an instance
         elif action == 116:
-            self.place_holder()
+            # Start a EC2 connection
+            conn_ec2 = Connection().ec2_connection()
+
+            # Get all volumes
+            volumes = Volumes.list_volumes(conn_ec2)
+
+            if volumes:
+                # Show and ask for the volume
+                print "Volumes available:"
+                for index, volume in enumerate(volumes, 1):
+                    print '\t', index, 'Id:', volume.id, 'Zone', volume.zone, 'Status:', volume.status
+
+                print "\nType the number of the Volume to attach:"
+                volume_num = self.ask_option(len(volumes))
+                volume = volumes[volume_num - 1]
+                volume_zone = volume.zone
+                volume_id = volume.id
+
+                # Get all instances
+                instances = EC2Instance.find_instances_running_zone(conn_ec2, volume_zone)
+
+                if instances:
+                    # Show and ask for the instance
+                    print "Instances available:"
+                    for index, instance in enumerate(instances, 1):
+                        print '\t', index, 'Id:', instance.id, 'Zone', instance.placement, 'State:', instance.state
+
+                    print "\nType the number of the Instance to attach the Volume:", volume_id
+                    instance_num = self.ask_option(len(instances))
+                    instance_id = instances[instance_num - 1].id
+
+                    # Attach and notify
+                    success = Volumes.attach_volume(conn_ec2, volume_id, instance_id)
+                    if success:
+                        print self.app_strings['attached']
+                else:
+                    print "\nYou need running instances in the zone:\n", volume_zone, \
+                          "to perform the attach operation"
+            else:
+                print "\nYou need running volumes\n" \
+                      "to perform the attach operation"
 
         # AWS - Detach a volume from an instance
         elif action == 117:
-            self.place_holder()
+            # Start a EC2 connection
+            conn_ec2 = Connection().ec2_connection()
+
+            # Get all volumes
+            volumes = Volumes.list_volumes(conn_ec2)
+
+            if volumes:
+                # Show and ask for the volume
+                print "Volumes available"
+                for index, volume in enumerate(volumes, 1):
+                    print '\t', index, 'Id:', volume.id, 'Status:', volume.status
+
+                print "\nType the number of the Volume to detach:"
+                volume_num = self.ask_option(len(volumes))
+                volume_id = volumes[volume_num-1].id
+
+                # Detach and notify
+                success = Volumes.detach_volume(conn_ec2, volume_id)
+                if success:
+                    print self.app_strings['detached']
+
+            else:
+                print "There are no detachable volumes"
 
         # AWS - Launch a new instance - Windows instance / Linux instance
         elif action == 1181 or action == 1182:
