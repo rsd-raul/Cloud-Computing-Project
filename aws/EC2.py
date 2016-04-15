@@ -1,3 +1,4 @@
+from boto import exception
 
 class EC2Instance:
 
@@ -67,10 +68,29 @@ class EC2Instance:
         conn.start_instances(instance_id, False)
 
     @staticmethod
+    def stop_instances(conn):
+        """ Stops all running instances"""
+
+        # From all the running instances, extract the id and make a list
+        instances_ids = [instance.id for instance in EC2Instance.find_instances_running(conn)]
+
+        for instance_id in instances_ids:
+            print "Stopping instance with id:", instance_id
+
+        # Stop all the running instances
+        conn.stop_instances(instances_ids, False)
+
+    @staticmethod
     def stop_instance(conn, instance_id):
         """ Stops a running instance"""
 
-        conn.stop_instances(instance_id, False)
+        try:
+            stopped = conn.stop_instances(instance_id, False)
+
+            for instance in stopped:
+                print "Stopping instance with id:", instance.id
+        except exception.EC2ResponseError:
+            print "Incorrect id format"
 
     @staticmethod
     def terminate_instance(conn, instance_id):

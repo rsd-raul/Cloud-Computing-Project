@@ -50,6 +50,7 @@ class Application:
             'start': "\n/--------- Starting action --------\\\n",
             'no_running': "---------- Nothing running ---------",
             'no_selected': "--------- Nothing selected ---------",
+            'created': "--------- Instance created ---------",
             'selected': "-------- Instances selected --------\n",
             'terminating': "------ Terminating everything ------",
             'terminated': "\n------------- Good Bye -------------\n",
@@ -206,13 +207,25 @@ class Application:
             # Launch the new instance
             EC2Instance.create_instance(conn_ec2)
 
+            print self.app_strings['created']
         # AWS - Stop all instances
         elif action == 114:
-            self.place_holder()
+            # Start a EC2 connection
+            conn_ec2 = Connection().ec2_connection()
+
+            # Stop all the running instances
+            EC2Instance.stop_instances(conn_ec2)
 
         # AWS - Stop a specific instance
         elif action == 115:
-            self.place_holder()
+            # Start a EC2 connection
+            conn_ec2 = Connection().ec2_connection()
+
+            # Ask for the instance id
+            instance_id = self.ask_string()
+
+            # Stop the running instance
+            EC2Instance.stop_instance(conn_ec2, instance_id)
 
         # AWS - Attach an existing volume to an instance
         elif action == 116:
