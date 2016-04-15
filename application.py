@@ -1,6 +1,7 @@
 from EC2 import EC2Instance
 from Connections import Connection
 from Volumes import Volumes
+from S3 import S3Bucket
 from time import sleep
 import webbrowser
 
@@ -54,6 +55,7 @@ class Application:
             'start': "\n/--------- Starting action --------\\\n",
             'no_running': "---------- Nothing running ---------",
             'no_selected': "--------- Nothing selected ---------",
+            'no_found': "----------- Nothing found ----------",
             'created': "--------- Instance created ---------",
             'created_vol': "---------- Volume created ----------",
             'selected': "-------- Instances selected --------\n",
@@ -343,15 +345,58 @@ class Application:
 
         # AWS - List all buckets
         elif action == 211:
-            self.place_holder()
+            # Start a S3 connection
+            conn_s3 = Connection.s3_connection()
+
+            buckets = S3Bucket.list_buckets(conn_s3)
+            if buckets:
+                print "Current AWS S3 Buckets:"
+                for b in buckets:
+                    print "\n", b.name
+            else:
+                print self.app_strings['no_found']
 
         # AWS - List all objects in a bucket - Choose from list
         elif action == 2121:
-            self.place_holder()
+            # Start a S3 connection
+            conn_s3 = Connection.s3_connection()
+
+            buckets = S3Bucket.list_buckets(conn_s3)
+            if buckets:
+                # Show and ask for the bucket
+                print "Current AWS S3 Buckets:"
+                for index, bucket in enumerate(buckets, 1):
+                    print '\t', str(index) + ":", bucket.name
+
+                print "\nType the number of the Bucket"
+                bucket_num = self.ask_option(len(buckets))
+
+                bucket_objects = buckets[bucket_num - 1].list()
+                if bucket_objects:
+                    for bucket_object in bucket_objects:
+                        print bucket_object
 
         # AWS - List all objects in a bucket - Enter a bucket name
         elif action == 2122:
-            self.place_holder()
+            # Start a S3 connection
+            conn_s3 = Connection.s3_connection()
+
+            buckets = S3Bucket.list_buckets(conn_s3)
+            if buckets:
+                # Ask for the bucket name
+
+                print "\nType the name of the Bucket"
+                bucket_name = self.ask_string()
+
+                success = False
+                for bucket in buckets:
+                    if bucket.name == bucket_name:
+                        success = True
+                        for bucket_object in bucket.list():
+                            print bucket_object
+
+                if not success:
+                    print self.app_strings['no_found']
 
         # AWS - Upload an object
         elif action == 213:
