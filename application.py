@@ -43,8 +43,15 @@ class Application:
                 "Enter a bucket name"],
             '3': [
                 "Performance metrics for a EC2 instance",
-                "Set an alarm"]}
-
+                "Set an alarm"]
+        }
+        self.app_strings = {
+            'start': "\n/--------- Starting action --------\\\n",
+            'no_running': "---------- Nothing running ---------",
+            'no_selected': "--------- Nothing selected ---------",
+            'restart': "\n------------ Restarting ------------\n",
+            'completed': "\n\\-------- Action completed --------/\n"
+        }
         # Initialize app with main menu
         self.process_selection(0)
 
@@ -107,7 +114,7 @@ class Application:
     # -------------------------------------------------- ACTIONS -------------------------------------------------
 
     def apply_action(self, action):
-        print "\n/--------- Starting action --------\\\n"
+        print self.app_strings['start']
 
         # AWS - List all running instances
         if action == 111:
@@ -118,13 +125,12 @@ class Application:
             instances = EC2Instance.find_instances_running(conn_ec2)
 
             if not instances:
-                print "---------- Nothing running ---------"
+                print self.app_strings['no_running']
             else:
                 # Format and print the requested information
                 print "Running AWS EC2 instances"
                 for index, instance in enumerate(instances):
-                    print index, ':', instance.id, '-', instance.instance_type, '<', instance.region, \
-                        '>: <Running since:', instance.launch_time, '>'
+                    self.print_instance(index, instance)
 
         # AWS - List some of the running instances - Choose from list
         elif action == 1121:
@@ -136,10 +142,10 @@ class Application:
 
             # If none, exit
             if not instances:
-                print "---------- Nothing running ---------"
+                print self.app_strings['no_running']
             else:
                 # Show index and id for the user to select the desired ones
-                print "Running AWS EC2 instances"
+                print "Running AWS EC2 instances:"
                 for index, instance in enumerate(instances, 1):
                     print index, ':', instance.id
 
@@ -149,17 +155,35 @@ class Application:
 
                 # If the user typed 0, exit
                 if len(numbers) == 1 and numbers[0] == 0:
-                    print "--------- Nothing selected ---------"
+                    print self.app_strings['no_selected']
                 # Else, format and print
                 else:
                     for index in numbers:
                         instance = instances[index]
-                        print index, ':', instance.id, '-', instance.instance_type, '<', instance.region, \
-                            '>: <Running since:', instance.launch_time, '>'
+                        self.print_instance(index, instance)
 
         # AWS - List some of the running instances - Enter an instance ID
         elif action == 1122:
-            self.place_holder()
+            # Start a EC2 connection
+            conn_ec2 = Connection().ec2_connection()
+
+            # Retrieve all actives
+            instances = EC2Instance.find_instances_running(conn_ec2)
+
+            # If none, exit
+            if not instances:
+                print self.app_strings['no_running']
+            else:
+                inst_id = self.ask_string()
+
+                something = False
+                for instance in instances:
+                    if instance.id == inst_id:
+                        self.print_instance(-1, instance)
+                        something = True
+
+                if not something:
+                    print self.app_strings['no_selected']
 
         # AWS - Start a new instance based on an existing AMI
         elif action == 113:
@@ -249,9 +273,9 @@ class Application:
         elif action == 32:
             self.place_holder()
 
-        print "\n\\-------- Action completed --------/\n"
+        print self.app_strings['completed']
 
-        print "\n------------ Restarting ------------\n"
+        print self.app_strings['restart']
         self.process_selection(0)
 
     @staticmethod
@@ -259,6 +283,19 @@ class Application:
         print "placeholder"
 
     # ------------------------------------------------ USER INPUT ------------------------------------------------
+
+    @staticmethod
+    def ask_string():
+        valid = False
+        result = ""
+
+        while not valid:
+            result = raw_input("Type id: ")
+            if 1 <= len(result):
+                valid = True
+
+        print
+        return result
 
     @staticmethod
     def ask_option(max_val):
@@ -299,3 +336,14 @@ class Application:
 
         print
         return result
+
+    # ------------------------------------------------ FORMATTING ------------------------------------------------
+
+    @staticmethod
+    def print_instance(index, instance):
+        result = "" if index == -1 else index, ':'
+        result += instance.id, '-', instance.instance_type, '<', instance.region, \
+            '>: <Running since:', instance.launch_time, '>'
+
+        print result
+
