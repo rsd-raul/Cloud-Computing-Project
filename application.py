@@ -389,7 +389,6 @@ class Application:
             buckets = S3Bucket.list_buckets(conn_s3)
             if buckets:
                 # Ask for the bucket name
-
                 print "\nType the name of the Bucket"
                 bucket_name = self.ask_string()
 
@@ -409,8 +408,8 @@ class Application:
                 if not success:
                     print self.app_strings['no_found']
 
-        # AWS - Upload an object
-        elif action == 213:
+        # AWS - Upload / Download / Delete an object
+        elif action == 213 or action == 214 or action == 215:
             # Start a S3 connection
             conn_s3 = Connection.s3_connection()
 
@@ -429,19 +428,24 @@ class Application:
                 print "Type the identifier of the file"
                 file_title = self.ask_string()
 
-                print "Type the location of the file"
-                file_location = self.ask_string()
+                if action == 213:
+                    print "Type the location of the file"
+                    file_location = self.ask_string()
 
-                S3Bucket.store_in_bucket(bucket, file_title, file_location)
-                print self.app_strings['stored']
+                    S3Bucket.store_in_bucket(bucket, file_title, file_location)
+                    print self.app_strings['stored']
 
-        # AWS - Download an object
-        elif action == 214:
-            self.place_holder()
+                elif action == 214:
+                    for key in bucket.list():
+                        if key.name == file_title:
+                            print "Downloading to res/\n"
+                            key.get_contents_to_filename('res/' + key.name)
+                            print self.app_strings['downloaded']
 
-        # AWS - Delete an object
-        elif action == 215:
-            self.place_holder()
+                else:
+                    S3Bucket.delete_from_bucket(bucket, file_title)
+
+                    print self.app_strings['removed']
 
         # OS - List all buckets
         elif action == 221:
