@@ -1,4 +1,5 @@
-from EC2 import EC2Instance
+from aws.EC2 import EC2Instance
+from openstack.EC2 import EC2InstanceOS
 from Connections import Connection
 from Volumes import Volumes
 from S3 import S3Bucket
@@ -16,7 +17,7 @@ class Application:
                 "Compute",
                 "Storage",
                 "Monitoring",
-                "Exit"],
+                "Terminate *warning"],
             '12': [
                 "AWS",
                 "OpenStack"],
@@ -154,6 +155,7 @@ class Application:
             print "Redirecting to amazon in 5 seconds, check manually!"
             sleep(5)
             webbrowser.open('https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#')
+            webbrowser.open('https://console.aws.amazon.com/s3/home?region=eu-west-1')
 
         # AWS - List all running instances
         elif action == 111:
@@ -344,7 +346,20 @@ class Application:
 
         # OS - List all running instances
         elif action == 121:
-            self.place_holder()
+
+            # UserWarning: SSL certificate verification is disabled
+            print "Disregard the warning:"
+
+            # List All
+            nodes = EC2InstanceOS.find_instances_running()
+
+            if not nodes:
+                print self.app_strings['no_running']
+            else:
+                # Format and print the requested information
+                print "\nRunning AWS EC2 nodes"
+                for index, node in enumerate(nodes):
+                    self.print_node(index, node)
 
         # AWS - List all buckets
         elif action == 211:
@@ -557,3 +572,10 @@ class Application:
 
         print result, instance.id, '-', instance.instance_type, '<' + str(instance.region) + \
             '>: <Running since:', str(instance.launch_time) + '>'
+
+    @staticmethod
+    def print_node(index, node):
+        result = "\t" + ("" if index == -1 else str(index) + ':')
+
+        print result, node.id, '-', node.extra['instance_type'], '<' + node.extra['availability'] + \
+            '>: <Running since:', node.extra['launch_time'] + '>'
