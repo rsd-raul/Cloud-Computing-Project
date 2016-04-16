@@ -30,9 +30,9 @@ Supported options:
 		4X	Download an object
 		5X	Delete an object
 	2	OpenStack
-		1	List all buckets
+		1X	List all buckets
 		2	List all objects in a bucket
-			1 	Choose from list 	
+			1X 	Choose from list
 			2 	Enter a bucket name
 		3	Upload an object
 		4	Download an object

@@ -13,6 +13,8 @@ class EC2InstanceOS:
     @staticmethod
     def find_instances_running():
         """ Find EC2 Instances """
+
+        # Disabling SSL certificate validation
         libcloud.security.VERIFY_SSL_CERT = False
 
         # Obtain the EC2 Driver

@@ -2,7 +2,8 @@ from aws.EC2 import EC2Instance
 from openstack.EC2 import EC2InstanceOS
 from Connections import Connection
 from Volumes import Volumes
-from S3 import S3Bucket
+from aws.S3 import S3Bucket
+from openstack.S3 import S3BucketOS
 from time import sleep
 import webbrowser
 
@@ -395,6 +396,8 @@ class Application:
                         print '\t' + str(bucket_object.key)
                 else:
                     print self.app_strings['no_found']
+            else:
+                print self.app_strings['no_found']
 
         # AWS - List all objects in a bucket - Enter a bucket name
         elif action == 2122:
@@ -422,6 +425,8 @@ class Application:
                 # If there is no bucket with that name, warn the user
                 if not success:
                     print self.app_strings['no_found']
+            else:
+                print self.app_strings['no_found']
 
         # AWS - Upload / Download / Delete an object
         elif action == 213 or action == 214 or action == 215:
@@ -461,14 +466,44 @@ class Application:
                     S3Bucket.delete_from_bucket(bucket, file_title)
 
                     print self.app_strings['removed']
+            else:
+                print self.app_strings['no_found']
 
         # OS - List all buckets
         elif action == 221:
-            self.place_holder()
+
+            buckets = S3BucketOS.list_buckets()
+
+            if buckets:
+                print "Current AWS S3 Buckets:"
+                for b in buckets:
+                    print "\n\t", b.name
+            else:
+                print self.app_strings['no_found']
 
         # OS - List all objects in a bucket - Choose from list
         elif action == 2221:
-            self.place_holder()
+
+            buckets = S3BucketOS.list_buckets()
+
+            if buckets:
+                # Show and ask for the bucket
+                print "Current AWS S3 Buckets:"
+                for index, bucket in enumerate(buckets, 1):
+                    print '\t', str(index) + ":", bucket.name
+
+                print "\nType the number of the Bucket"
+                bucket_num = self.ask_option(len(buckets))
+
+                bucket_objects = buckets[bucket_num - 1].list_objects()
+
+                if bucket_objects:
+                    for bucket_object in bucket_objects:
+                        print '\t' + bucket_object.name
+                else:
+                    print self.app_strings['no_found']
+            else:
+                print self.app_strings['no_found']
 
         # OS - List all objects in a bucket - Enter a bucket name
         elif action == 2222:
