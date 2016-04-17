@@ -1,6 +1,3 @@
-import datetime
-import os
-import boto
 from Connections import Connection
 
 
@@ -97,8 +94,8 @@ class CloudWatch:
 
         # Now create Alarm for the metric
         print '\nFinalizing creation (hold)'
-        alarm = metric.create_alarm(alarm_name, comparison, threshold, period, eval_periods, statistics, alarm_actions=[topic_arn],
-                                    ok_actions=[topic_arn])
+        alarm = metric.create_alarm(alarm_name, comparison, threshold, period, eval_periods, statistics,
+                                    alarm_actions=[topic_arn], ok_actions=[topic_arn])
         if alarm:
             return True
         else:

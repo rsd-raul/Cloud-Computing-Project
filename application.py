@@ -748,5 +748,10 @@ class Application:
     def print_node(index, node):
         result = "\t" + ("" if index == -1 else str(index) + ':')
 
-        print result, node.id, '-', node.extra['instance_type'], '<' + node.extra['availability'] + \
-            '>: <Running since:', node.extra['launch_time'] + '>'
+        # Calculate the machine type based on the flavorId
+        flavours = {'1': "tiny", '2': "small", '3': "medium", '4': "large", '5': "xlarge"}
+        instance_type = "m1." + str(flavours[node.extra['flavorId']])
+
+        print result, node.id, '-', instance_type, '<' + node.extra['availability_zone'] + '>: <Running since:', \
+            node.extra['created'] + '>'
+

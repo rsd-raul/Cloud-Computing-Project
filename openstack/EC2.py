@@ -17,11 +17,20 @@ class EC2InstanceOS:
         # Disabling SSL certificate validation
         libcloud.security.VERIFY_SSL_CERT = False
 
-        # Obtain the EC2 Driver
-        key_id = config.get('Credentials', 'aws_access_key_id')
-        secret_key = config.get('Credentials', 'aws_secret_access_key')
-        aws_driver = get_driver(Provider.EC2_EU_WEST)
-        driver = aws_driver(key_id, secret_key)
+        # AWS EC2 Driver
+        # key_id = config.get('Credentials', 'aws_access_key_id')
+        # secret_key = config.get('Credentials', 'aws_secret_access_key')
+        # aws_driver = get_driver(Provider.EC2_EU_WEST)
+        # driver = aws_driver(key_id, secret_key)
+
+        # OpenStack Driver
+        key_id = config.get('LibCloud', 'username')
+        secret_key = config.get('LibCloud', 'secret_key')
+        auth_url = config.get('LibCloud', 'auth_url')
+
+        provider = get_driver(Provider.OPENSTACK)
+        driver = provider(key_id, secret_key, ex_force_auth_url=auth_url, ex_force_auth_version='2.0_password',
+                          ex_tenant_name=key_id, ex_force_service_region='RegionOne')
 
         # Get all instances associated with this AWS account
         nodes = driver.list_nodes()
