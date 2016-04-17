@@ -1,17 +1,19 @@
 import boto
 import boto.ec2
+from boto import config
 from boto.s3.connection import S3Connection
 import boto.ec2.cloudwatch
+from boto.sdb.regioninfo import SDBRegionInfo
 
 
 class Connection:
     def __init__(self):
         """ Connection Instance """
-        self.region = 'eu-west-1'
 
-    def ec2_connection(self):
+    @staticmethod
+    def ec2_connection():
         """ Create and return an EC2 Connection """
-        conn = boto.ec2.connect_to_region(self.region)
+        conn = boto.ec2.connect_to_region('eu-west-1')
         return conn
 
     @staticmethod
@@ -22,8 +24,25 @@ class Connection:
 
     @staticmethod
     def cw_connection():
-        """ Create and return an EC3 Connection """
+        """ Create and return an CW Connection """
         conn = boto.connect_cloudwatch()
+
         # Price by region only supports us-east-1
         # conn = boto.ec2.cloudwatch.connect_to_region("us-east-1")
+
+        return conn
+
+    @staticmethod
+    def sns_connection():
+        """ Create and return an SNS Connection """
+
+        key_id = config.get('Credentials', 'aws_access_key_id')
+        access_key = config.get('Credentials', 'aws_secret_access_key')
+
+        # Undocumented way to connect SNS to a different zone... Appears to work
+        region_name = 'eu-west-1'
+        region_endpoint = 'sns.eu-west-1.amazonaws.com'
+        region = SDBRegionInfo(None, region_name, region_endpoint)
+        conn = boto.connect_sns(key_id, access_key, region=region)
+
         return conn

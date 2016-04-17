@@ -1,7 +1,7 @@
 # Cloud-Computing-Project
 Boto/LibCloud to automate AWS related tasks w/ OpenStack
 
-Supported options:
+Supported options (X means Active and Tested):
 
 1X	Compute
 	1X	AWS
@@ -37,8 +37,8 @@ Supported options:
 		3X	Upload an object
 		4X	Download an object
 		5X	Delete an object
-3	Monitoring
-	1 	Performance metrics for a EC2 instance
-	    1   Activate monitoring
-   	    2   Get metrics
-	2 	Set an alarm
+3X	Monitoring
+	1X 	Performance metrics for a EC2 instance
+	    1X   Activate monitoring
+   	    2X   Get metrics
+	2X 	Set an alarm

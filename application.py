@@ -73,7 +73,10 @@ class Application:
             'stored': "------------ File stored -----------",
             'removed': "------------ File removed ----------",
             'downloaded': "---------- File downloaded ---------",
-            'completed': "\n\\-------- Action completed --------/\n"
+            'completed': "\n\\-------- Action completed --------/\n",
+            'creating_alarm': "---------- Creating alarm ----------\n",
+            'created_alarm':  "\n----------- Alarm created ----------",
+            'failure_alarm':  "---------- Creation failed ---------"
         }
         # Initialize app with main menu
         self.process_selection(0)
@@ -147,7 +150,7 @@ class Application:
             print self.app_strings['terminating']
 
             # Start a EC2 connection
-            conn_ec2 = Connection().ec2_connection()
+            conn_ec2 = Connection.ec2_connection()
 
             # Terminate all instances
             print "\nTerminating instances:\n"
@@ -167,7 +170,7 @@ class Application:
         # AWS - List all running instances
         elif action == 111:
             # Start a EC2 connection
-            conn_ec2 = Connection().ec2_connection()
+            conn_ec2 = Connection.ec2_connection()
 
             # List All
             instances = EC2Instance.find_instances_running(conn_ec2)
@@ -183,7 +186,7 @@ class Application:
         # AWS - List some of the running instances - Choose from list
         elif action == 1121:
             # Start a EC2 connection
-            conn_ec2 = Connection().ec2_connection()
+            conn_ec2 = Connection.ec2_connection()
 
             # Retrieve all actives
             instances = EC2Instance.find_instances_running(conn_ec2)
@@ -209,7 +212,7 @@ class Application:
         # AWS - List some of the running instances - Enter an instance ID
         elif action == 1122:
             # Start a EC2 connection
-            conn_ec2 = Connection().ec2_connection()
+            conn_ec2 = Connection.ec2_connection()
 
             # Retrieve all actives
             instances = EC2Instance.find_instances_running(conn_ec2)
@@ -234,7 +237,7 @@ class Application:
         # AWS - Start a new instance based on an existing AMI
         elif action == 113:
             # Start a EC2 connection
-            conn_ec2 = Connection().ec2_connection()
+            conn_ec2 = Connection.ec2_connection()
 
             # Launch the new instance
             EC2Instance.create_instance(conn_ec2)
@@ -243,7 +246,7 @@ class Application:
         # AWS - Stop all instances
         elif action == 114:
             # Start a EC2 connection
-            conn_ec2 = Connection().ec2_connection()
+            conn_ec2 = Connection.ec2_connection()
 
             # Stop all the running instances
             EC2Instance.stop_instances(conn_ec2)
@@ -251,7 +254,7 @@ class Application:
         # AWS - Stop a specific instance
         elif action == 115:
             # Start a EC2 connection
-            conn_ec2 = Connection().ec2_connection()
+            conn_ec2 = Connection.ec2_connection()
 
             # Ask for the instance id
             instance_id = self.ask_string()
@@ -262,7 +265,7 @@ class Application:
         # AWS - Create a new volume
         elif action == 119:
             # Start a EC2 connection
-            conn_ec2 = Connection().ec2_connection()
+            conn_ec2 = Connection.ec2_connection()
 
             # Create the new volume
             success = Volumes.create_volume(conn_ec2)
@@ -272,7 +275,7 @@ class Application:
         # AWS - Attach an existing volume to an instance
         elif action == 116:
             # Start a EC2 connection
-            conn_ec2 = Connection().ec2_connection()
+            conn_ec2 = Connection.ec2_connection()
 
             # Get all volumes
             volumes = Volumes.list_volumes(conn_ec2)
@@ -316,7 +319,7 @@ class Application:
         # AWS - Detach a volume from an instance
         elif action == 117:
             # Start a EC2 connection
-            conn_ec2 = Connection().ec2_connection()
+            conn_ec2 = Connection.ec2_connection()
 
             # Get all volumes
             volumes = Volumes.list_volumes(conn_ec2)
@@ -342,7 +345,7 @@ class Application:
         # AWS - Launch a new instance - Windows instance / Linux instance
         elif action == 1181 or action == 1182:
             # Start a EC2 connection
-            conn_ec2 = Connection().ec2_connection()
+            conn_ec2 = Connection.ec2_connection()
 
             so = "windows" if action == 1181 else "linux"
 
@@ -579,9 +582,9 @@ class Application:
                 print self.app_strings['no_found']
 
         # Performance metrics for a EC2 instance - Activate monitoring
-        elif action == 311 or action == 312:
+        elif action == 311 or action == 312 or action == 32:
             # Start a EC2 connection
-            conn_ec2 = Connection().ec2_connection()
+            conn_ec2 = Connection.ec2_connection()
 
             # Retrieve all actives
             instances = EC2Instance.find_instances_running(conn_ec2)
@@ -603,15 +606,51 @@ class Application:
 
                 if action == 311:
                     CloudWatch.enable_cw_on_instance(conn_ec2, str(instance.id))
-                else:
+                elif action == 312:
                     # New CW connection
                     conn_cw = Connection.cw_connection()
 
                     CloudWatch.query_cw_by_instance_id(str(instance.id), conn_cw)
+                else:
+                    print "Type a short but meaningful name for your alarm."
+                    alarm_name = self.ask_custom_string("Type name: ")
 
-        # Set an alarm
-        elif action == 32:
-            self.place_holder()
+                    print "Type the email address you want to be notified when the alarm fires."
+                    email_address = self.ask_custom_string("Type email: ")
+
+                    print "Type the Metric you want to be notified about. Valid values are:"
+                    print "DiskReadBytes | DiskWriteBytes | DiskReadOps | DiskWriteOps"
+                    print "NetworkIn | NetworkOut"
+                    print "CPUUtilization"
+                    metric_name = self.ask_custom_string("Type metric: ")
+
+                    print "Type the comparison operator. Valid values are:"
+                    print ">= | > | < | <="
+                    comparison = self.ask_custom_string("Type operator: ")
+
+                    print "Type the threshold value that the metric will be compared against."
+                    threshold = self.ask_custom_string("Type threshold: ")
+
+                    print "Type the granularity of the returned data."
+                    print "Minimum value is 60 (seconds), others must be multiples of 60."
+                    period = self.ask_custom_string("Type period: ")
+
+                    print "Type the number of periods over which the alarm must be"
+                    print "measured before triggering notification."
+                    eval_periods = self.ask_custom_string("Type number of periods: ")
+
+                    print "Type the statistic to apply. Valid values are:"
+                    print "SampleCount | Average | Sum | Minimum | Maximum"
+                    statistics = self.ask_custom_string("Type statistic: ")
+
+                    # Create the alarm
+                    print self.app_strings['creating_alarm']
+                    success = CloudWatch.create_cw_alarm(instance.id, alarm_name, email_address, metric_name,
+                                                         comparison, threshold, period, eval_periods, statistics)
+                    if success:
+                        print self.app_strings['created_alarm']
+                    else:
+                        print self.app_strings['failure_alarm']
 
         print self.app_strings['completed']
 
@@ -634,6 +673,19 @@ class Application:
 
         while not valid:
             result = raw_input("Type id: ")
+            if 1 <= len(result):
+                valid = True
+
+        print
+        return result
+
+    @staticmethod
+    def ask_custom_string(question):
+        valid = False
+        result = ""
+
+        while not valid:
+            result = raw_input(question)
             if 1 <= len(result):
                 valid = True
 

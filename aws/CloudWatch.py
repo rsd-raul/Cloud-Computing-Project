@@ -1,4 +1,7 @@
 import datetime
+import os
+import boto
+from Connections import Connection
 
 
 class CloudWatch:
@@ -42,18 +45,6 @@ class CloudWatch:
             print "No instances to monitor"
 
     @staticmethod
-    def query_cw_by_instance(instance, conn_cw):
-        """ Query CloudWatch for data about your instance"""
-        metrics = conn_cw.list_metrics()
-        my_metrics = []
-        for metric in metrics:
-            if 'InstanceID' in metric.dimensions:
-                if instance.id in metric.dimensions['InstanceId']:
-                    my_metrics.append(metric)
-
-        print my_metrics
-
-    @staticmethod
     def query_cw_by_instance_id(instance_id, conn_cw):
         """ Query CloudWatch for data about your instance"""
         # metrics = conn_cw.list_metrics()
@@ -68,28 +59,47 @@ class CloudWatch:
 
         print my_metrics
 
-    # @staticmethod
-    # def cw_alarm(instance):
-    #     """ Setup a CW alarm to send a notification - Assume you have CW enabled, you want to be notified when certain conditions
-    #     arise. This make use of the Simple Notification Service (SNS) to send an email of CW events using alarms"""
-    #     sns = boto.connect_sns()
-    #     sns.create_topic
+    @staticmethod
+    def create_cw_alarm(instance_id, alarm_name, email_address, metric_name, comparison, threshold, period,
+                        eval_periods, statistics):
 
+        print "Starting alarm creation process\n"
 
-def get_metric(date, metrics):
-    """
-    Get the statistics for 1 or more metrics at a given moment.
-    The metric will request the statistics from 18 hours before
-    the date argument until the date argument. (18h is to make
-    sure at least 1 datapoint is returned).
-    Return: a dict with the metric name as key and the value.
-    """
-    stats = {}
-    start = date - datetime.timedelta(hours=18)
-    # print 'Retrieving statistics from %s to %s.\n' % (start, date)
-    for metric in metrics:
-        if u'ServiceName' in metric.dimensions:
-            datapoints = metric.query(start, date, 'Maximum')
-            datapoints = sorted(datapoints, key=lambda datapoint: datapoint[u'Timestamp'], reverse=True)
-            stats[metric.dimensions[u'ServiceName'][0]] = (datapoints[0])[u'Maximum']
-    return stats
+        # Create connections to the required services
+        conn_ec2 = Connection.ec2_connection()
+        conn_sns = Connection.sns_connection()
+        conn_cw = Connection.cw_connection()
+
+        # Make sure the instance in question exists and is being monitored with CloudWatch.
+        rs = conn_ec2.get_all_instances(instance_id)
+        if len(rs) != 1:
+            print 'Unable to find instance:', instance_id
+            return False
+
+        instance = rs[0].instances[0]
+        instance.monitor()
+
+        # Create the SNS Topic
+        topic_name = 'CWAlarm-%s' % alarm_name
+        print 'Creating SNS topic: %s' % topic_name
+
+        response = conn_sns.create_topic(topic_name)
+        topic_arn = response['CreateTopicResponse']['CreateTopicResult']['TopicArn']
+        print 'Topic ARN: %s' % topic_arn
+
+        # Subscribe the email addresses to SNS Topic
+        print 'Subscribing %s to Topic %s' % (email_address, topic_arn)
+        conn_sns.subscribe(topic_arn, 'email', email_address)
+
+        # Now find the Metric we want to be notified about
+        metric = conn_cw.list_metrics(dimensions={'InstanceId': instance_id}, metric_name=metric_name)[0]
+        print 'Found: %s' % metric
+
+        # Now create Alarm for the metric
+        print '\nFinalizing creation (hold)'
+        alarm = metric.create_alarm(alarm_name, comparison, threshold, period, eval_periods, statistics, alarm_actions=[topic_arn],
+                                    ok_actions=[topic_arn])
+        if alarm:
+            return True
+        else:
+            return False
