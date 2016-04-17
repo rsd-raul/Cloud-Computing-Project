@@ -6,6 +6,7 @@ from aws.S3 import S3Bucket
 from openstack.S3 import S3BucketOS
 from time import sleep
 import webbrowser
+from aws.CloudWatch import CloudWatch
 
 
 class Application:
@@ -31,7 +32,7 @@ class Application:
                 "Attach an existing volume to an instance",
                 "Detach a volume from an instance",
                 "Launch a new instance",
-                "Create a new volume"],
+                "Create a new volume (new)"],
             '1-1-2': [
                 "Choose from list",
                 "Enter an instance ID"],
@@ -51,7 +52,10 @@ class Application:
                 "Enter a bucket name"],
             '3': [
                 "Performance metrics for a EC2 instance",
-                "Set an alarm"]
+                "Set an alarm"],
+            '31': [
+                "Activate monitoring (new)",
+                "Get metrics"]
         }
         self.app_strings = {
             'start': "\n/--------- Starting action --------\\\n",
@@ -114,11 +118,13 @@ class Application:
             self.show_menu('2-12-2')
         elif action == 3:
             self.show_menu('3')
+        elif action == 31:
+            self.show_menu('31')
 
         # Go back options
         elif action == 13 or action == 120 or action == 1123 or action == 1183 \
                 or action == 122 or action == 216 or action == 2123 or action == 226 \
-                or action == 2223 or action == 23 or action == 33:
+                or action == 2223 or action == 23 or action == 33 or action == 313:
             self.process_selection(action // 100)
             input_needed = False
 
@@ -572,9 +578,36 @@ class Application:
             else:
                 print self.app_strings['no_found']
 
-        # Performance metrics for a EC2 instance
-        elif action == 31:
-            self.place_holder()
+        # Performance metrics for a EC2 instance - Activate monitoring
+        elif action == 311 or action == 312:
+            # Start a EC2 connection
+            conn_ec2 = Connection().ec2_connection()
+
+            # Retrieve all actives
+            instances = EC2Instance.find_instances_running(conn_ec2)
+
+            # If none, exit
+            if not instances:
+                print self.app_strings['no_running']
+            else:
+                # Show index and id for the user to select the desired ones
+                print "Running AWS EC2 instances:\n"
+                for index, instance in enumerate(instances, 1):
+                    print index, ':', instance.id
+
+                # Ask for the desired instances
+                print "\nType the number of the id"
+                index = self.ask_option(len(instances))
+
+                instance = instances[index-1]
+
+                if action == 311:
+                    CloudWatch.enable_cw_on_instance(conn_ec2, str(instance.id))
+                else:
+                    # New CW connection
+                    conn_cw = Connection.cw_connection()
+
+                    CloudWatch.query_cw_by_instance_id(str(instance.id), conn_cw)
 
         # Set an alarm
         elif action == 32:

@@ -39,4 +39,6 @@ Supported options:
 		5X	Delete an object
 3	Monitoring
 	1 	Performance metrics for a EC2 instance
+	    1   Activate monitoring
+   	    2   Get metrics
 	2 	Set an alarm
