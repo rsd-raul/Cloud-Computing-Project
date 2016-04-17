@@ -507,7 +507,32 @@ class Application:
 
         # OS - List all objects in a bucket - Enter a bucket name
         elif action == 2222:
-            self.place_holder()
+            # Start a S3 connection
+            conn_s3 = Connection.s3_connection()
+
+            buckets = S3BucketOS.list_buckets()
+            if buckets:
+                # Ask for the bucket name
+                print "\nType the name of the Bucket"
+                bucket_name = self.ask_string()
+
+                success = False
+                for bucket in buckets:
+                    if bucket.name == bucket_name:
+                        success = True
+                        bucket_objects = bucket.list_objects()
+                        for bucket_object in bucket_objects:
+                            print '\t' + bucket_object.name
+
+                        # If there are no files, warn the user
+                        if not bucket_objects:
+                            print self.app_strings['no_found']
+
+                # If there is no bucket with that name, warn the user
+                if not success:
+                    print self.app_strings['no_found']
+            else:
+                print self.app_strings['no_found']
 
         # OS - Upload an object
         elif action == 223:
