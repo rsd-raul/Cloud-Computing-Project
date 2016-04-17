@@ -35,6 +35,6 @@ class S3Bucket:
 
     @staticmethod
     def delete_from_bucket(bucket, file_title):
-        """ Store a file inside a Bucket """
+        """ Delete a file from a Bucket """
 
         return bucket.delete_key(file_title)

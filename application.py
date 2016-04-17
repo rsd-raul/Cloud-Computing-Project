@@ -1,7 +1,7 @@
 from aws.EC2 import EC2Instance
 from openstack.EC2 import EC2InstanceOS
-from Connections import Connection
-from Volumes import Volumes
+from aws.Connections import Connection
+from aws.Volumes import Volumes
 from aws.S3 import S3Bucket
 from openstack.S3 import S3BucketOS
 from time import sleep
@@ -507,8 +507,6 @@ class Application:
 
         # OS - List all objects in a bucket - Enter a bucket name
         elif action == 2222:
-            # Start a S3 connection
-            conn_s3 = Connection.s3_connection()
 
             buckets = S3BucketOS.list_buckets()
             if buckets:
@@ -534,17 +532,45 @@ class Application:
             else:
                 print self.app_strings['no_found']
 
-        # OS - Upload an object
-        elif action == 223:
-            self.place_holder()
+        # OS - Upload / Download / Delete an object
+        elif action == 223 or action == 224 or action == 225:
 
-        # OS - Download an object
-        elif action == 224:
-            self.place_holder()
+            buckets = S3BucketOS.list_buckets()
+            if buckets:
+                # Show and ask for the bucket
+                print "Current AWS S3 Buckets:"
+                for index, bucket in enumerate(buckets, 1):
+                    print '\t', str(index) + ":", bucket.name
 
-        # OS - Delete an object
-        elif action == 225:
-            self.place_holder()
+                print "\nType the number of the Bucket"
+                bucket_num = self.ask_option(len(buckets))
+
+                bucket = buckets[bucket_num - 1]
+
+                print "Type the identifier of the file"
+                file_title = self.ask_string()
+
+                if action == 223:
+                    print "Type the location of the file"
+                    file_location = self.ask_string()
+
+                    S3BucketOS.store_in_bucket(bucket, file_title, file_location)
+                    print self.app_strings['stored']
+
+                elif action == 224:
+                    for key in bucket.list_objects():
+                        if key.name == file_title:
+                            print "Downloading to res/\n"
+                            key.download('res/' + key.name)
+                            print self.app_strings['downloaded']
+
+                else:
+                    for key in bucket.list_objects():
+                        if key.name == file_title:
+                            key.delete()
+                            print self.app_strings['removed']
+            else:
+                print self.app_strings['no_found']
 
         # Performance metrics for a EC2 instance
         elif action == 31:

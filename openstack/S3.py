@@ -2,6 +2,7 @@ from libcloud.storage.providers import get_driver as get_storage_driver
 from libcloud.storage.types import Provider as StorageProvider
 from boto import config
 
+
 class S3BucketOS:
     def __init__(self):
         """ S3Bucket Constructor """
@@ -19,4 +20,8 @@ class S3BucketOS:
 
         return buckets
 
+    @staticmethod
+    def store_in_bucket(bucket, file_title, file_location):
+        """ Store a file inside a Bucket """
 
+        bucket.upload_object(file_location, file_title)

@@ -20,7 +20,7 @@ Supported options:
 		9X	Create volume
 	2X	OpenStack
 		1X	List all running instances
-2	Storage
+2X	Storage
 	1X	AWS
 		1X	List all buckets
 		2X	List all objects in a bucket
@@ -29,14 +29,14 @@ Supported options:
 		3X	Upload an object
 		4X	Download an object
 		5X	Delete an object
-	2	OpenStack
+	2X	OpenStack
 		1X	List all buckets
-		2	List all objects in a bucket
+		2X	List all objects in a bucket
 			1X 	Choose from list
-			2 	Enter a bucket name
-		3	Upload an object
-		4	Download an object
-		5	Delete an object
+			2X 	Enter a bucket name
+		3X	Upload an object
+		4X	Download an object
+		5X	Delete an object
 3	Monitoring
 	1 	Performance metrics for a EC2 instance
 	2 	Set an alarm
