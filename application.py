@@ -4,6 +4,7 @@ from aws.Volumes import Volumes
 from aws.S3 import S3Bucket
 from aws.Glacier import GlacierVaults
 from aws.CloudWatch import CloudWatch
+from aws.AutoScale import AutoScale
 
 from openstack.EC2 import EC2InstanceOS
 from openstack.S3 import S3BucketOS
@@ -61,11 +62,19 @@ class Application:
                 "Get metrics"],
             '4': [
                 "Glacier Vaults Interface (new)",
+                "AutoScale Interface (new)",
                 "Delete everything *warning"],
             '41': [
                 "List Vaults (new)",
                 "Create Vault (new)",
-                "Delete Vault (new)"]
+                "Delete Vault (new)"],
+            '42': [
+                "Testing connection (new)",
+                "Create AutoScaling Group (new)",
+                "Delete AutoScaling Group (new)",
+                "Create Scaling policies (up and down) (new)",
+                "Create custom Alarm w. AutoScale (new)"
+            ]
         }
         self.app_strings = {
             'starting_app': "\n~~~~~~~~~~ Starting system ~~~~~~~~~\n",
@@ -89,7 +98,9 @@ class Application:
             'downloaded': "---------- File downloaded ---------",
             'creating_alarm': "---------- Creating alarm ----------\n",
             'created_alarm':  "\n----------- Alarm created ----------",
-            'failure_alarm':  "---------- Creation failed ---------"
+            'failure_alarm':  "---------- Creation failed ---------",
+            'created_group':  "\n----------- Group created ----------",
+            'deleted_group':  "\n----------- Group deleted ----------"
         }
         # Initialize app with main menu
         print self.app_strings['starting_app']
@@ -139,14 +150,18 @@ class Application:
             self.show_menu('31')
         elif action == 4:
             self.show_menu('4')
+            max_val = 4
         elif action == 41:
             self.show_menu('41')
             max_val = 4
+        elif action == 42:
+            self.show_menu('42')
+            max_val = 6
 
         # Go back options
         elif action == 13 or action == 120 or action == 1123 or action == 1183 or action == 122 or action == 216 \
             or action == 2123 or action == 226 or action == 2223 or action == 23 or action == 33 or action == 313 \
-                or action == 43 or action == 414:
+                or action == 43 or action == 414 or action == 425:
             self.process_selection(action // 100)
             input_needed = False
 
@@ -674,8 +689,94 @@ class Application:
                 GlacierVaults.delete_vault(conn_glacier, name)
                 print self.app_strings['deleted_glacier']
 
+        # AWS - Auto Scale - Test connection
+        elif action == 421:
+            print "Testing connection:"
+
+            print '\n\t', Connection.as_connection()
+
+        # AWS - Auto Scale - Create Auto Scaling Group
+        elif action == 422:
+            conn_as = Connection.as_connection()
+
+            launch_config_name = self.ask_custom_string("Type Launch Configuration name: ")
+            as_group_name = self.ask_custom_string("Type Auto Scaling group name: ")
+
+            min_inst = self.ask_custom_int("Type min instances (min 0, max 20)", 0, 20)
+            max_inst = self.ask_custom_int("Type max instances (min " + str(min_inst) + " max 40)", min_inst, 40)
+
+            success = AutoScale.create_as_group(conn_as, launch_config_name, as_group_name, min_inst, max_inst)
+            if success:
+                print self.app_strings['created_group']
+
+        # AWS - Auto Scale - Delete Auto Scaling Group
+        elif action == 423:
+
+            conn_as = Connection.as_connection()
+            launch_config_name = self.ask_custom_string("Type Launch Configuration name: ")
+            as_group_name = self.ask_custom_string("Type Auto Scaling group name: ")
+
+            success = AutoScale.delete_as_group(conn_as, as_group_name, launch_config_name)
+            if success:
+                print self.app_strings['deleted_group']
+
+        # AWS - Auto Scale - Create policies
+        elif action == 424:
+            conn_as = Connection.as_connection()
+
+            as_group_name = self.ask_custom_string("Type Auto Scaling group name: ")
+            AutoScale.create_scale_policies(conn_as, as_group_name)
+
+            print 'Policies', 'scale_up', 'and', 'scale_down', 'created'
+
+        # AWS - Auto Scale - Create alarm
+        elif action == 425:
+            conn_as = Connection.as_connection()
+            conn_cw = Connection.cw_connection()
+
+            print "Type the Auto Scaling group name to set the alarm on"
+            as_group_name = self.ask_custom_string("Type Auto Scaling group name: ")
+
+            print "Type a short but meaningful name for your alarm."
+            alarm_name = self.ask_custom_string("Type name: ")
+
+            print "Select the scaling policy. Valid values are:"
+            print "scale_up | scale_down "
+            scaling_policy_name = self.ask_custom_string("Type one of them")
+
+            print "Type the Metric you want to be notified about. Valid values are:"
+            print "DiskReadBytes | DiskWriteBytes | DiskReadOps | DiskWriteOps"
+            print "NetworkIn | NetworkOut"
+            print "CPUUtilization"
+            metric_name = self.ask_custom_string("Type metric: ")
+
+            print "Type the comparison operator. Valid values are:"
+            print ">= | > | < | <="
+            comparison = self.ask_custom_string("Type operator: ")
+
+            print "Type the threshold value that the metric will be compared against."
+            threshold = self.ask_custom_string("Type threshold: ")
+
+            print "Type the granularity of the returned data."
+            print "Minimum value is 60 (seconds), others must be multiples of 60."
+            period = self.ask_custom_string("Type period: ")
+
+            print "Type the number of periods over which the alarm must be"
+            print "measured before triggering notification."
+            eval_periods = self.ask_custom_string("Type number of periods: ")
+
+            print "Type the statistic to apply. Valid values are:"
+            print "SampleCount | Average | Sum | Minimum | Maximum"
+            statistics = self.ask_custom_string("Type statistic: ")
+
+            print self.app_strings['creating_alarm']
+            success = AutoScale.create_scale_alarm(conn_as, conn_cw, as_group_name, alarm_name, scaling_policy_name,
+                                                   metric_name, comparison, threshold, period, eval_periods, statistics)
+            if success:
+                print self.app_strings['created_alarm']
+
         # AWS - Exit -> Terminate all
-        elif action == 42:
+        elif action == 43:
             print self.app_strings['terminating']
 
             # Start a EC2 connection
@@ -703,6 +804,10 @@ class Application:
             webbrowser.open('https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#')
             webbrowser.open('https://console.aws.amazon.com/s3/home?region=eu-west-1')
             webbrowser.open('https://eu-west-1.console.aws.amazon.com/glacier/home?region=eu-west-1')
+            webbrowser.open(
+                'https://eu-west-1.console.aws.amazon.com/ec2/autoscaling/home?region=eu-west-1#LaunchConfigurations:')
+            webbrowser.open(
+                'eu-west-1.console.aws.amazon.com/ec2/autoscaling/home?region=eu-west-1#AutoScalingGroups:view=details')
 
         # The action has been completed
         print self.app_strings['completed']
@@ -751,6 +856,22 @@ class Application:
             try:
                 option = int(raw_input("Select option: "))
                 if 1 <= option <= max_val:
+                    valid = True
+            except ValueError:
+                valid = False
+
+        print
+        return option
+
+    @staticmethod
+    def ask_custom_int(question, min_val, max_val):
+        valid = False
+        option = -1
+
+        while not valid:
+            try:
+                option = int(raw_input(question))
+                if min_val <= option <= max_val:
                     valid = True
             except ValueError:
                 valid = False

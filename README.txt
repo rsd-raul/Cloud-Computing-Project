@@ -41,15 +41,21 @@ Supported options (X means Active and Tested):
 		5X	Delete an object
 3X	Monitoring
 	1X 	Performance metrics for a EC2 instance
-	    1X   Activate monitoring
-   	    2X   Get metrics
+	    1X  Activate monitoring
+   	    2X  Get metrics
 	2X 	Set an alarm
 
 4X  Extras
-    1X   Glacier Vaults Interface
-        1X   List Vaults
-        2X   Create Vault
-        3X   Delete Vault
-    2X   Terminate *warning
+    1X  Glacier Vaults Interface
+        1X  List Vaults
+        2X  Create Vault
+        3X  Delete Vault
+    2X   AutoScaling Interface
+        1X  Testing connection
+        2X  Create AutoScaling Group
+        3X  Delete AutoScaling Group
+        4X  Create Scaling policies (up and down)
+        5X  Create Alarm
+    3X   Terminate *warning
 
-*Terminate shuts down any instances and any volumes associated with the account (key, access), it cannot be undone.
+*Terminate shuts down any instances, any volumes and any vaults associated with the account. (cannot be undone)

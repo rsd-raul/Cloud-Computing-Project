@@ -5,6 +5,7 @@ from boto import config
 from boto.s3.connection import S3Connection
 import boto.ec2.cloudwatch
 from boto.sdb.regioninfo import SDBRegionInfo
+from boto.ec2.autoscale import AutoScaleConnection
 
 
 class Connection:
@@ -50,5 +51,19 @@ class Connection:
         """ Create and return a Glacier Connection """
 
         conn = boto.glacier.connect_to_region('eu-west-1')
+
+        return conn
+
+    @staticmethod
+    def as_connection():
+
+        # Deprecated by using anotation in boto.config
+        # import boto.ec2.autoscale
+        # auto_scale = boto.ec2.autoscale.connect_to_region('eu-west-1')
+
+        key_id = config.get('Credentials', 'aws_access_key_id')
+        access_key = config.get('Credentials', 'aws_secret_access_key')
+
+        conn = AutoScaleConnection(key_id, access_key)
 
         return conn
