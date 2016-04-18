@@ -23,3 +23,10 @@ class GlacierVaults:
     def delete_vault(conn, name):
 
         conn.delete_vault(name)
+
+    @staticmethod
+    def terminate_all_vaults(conn):
+        vaults = GlacierVaults.list_vaults(conn)
+
+        for vault in vaults:
+            vault.delete()

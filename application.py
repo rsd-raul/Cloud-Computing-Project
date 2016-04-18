@@ -689,9 +689,16 @@ class Application:
             print "\nTerminating volumes:\n"
             sleep(7)
             Volumes.delete_all_volumes(conn_ec2)
+            print "\tTerminated"
+
+            # Terminate all vaults
+            print "\nTerminating vaults:\n"
+            conn_glacier = Connection.glacier_connection()
+            GlacierVaults.terminate_all_vaults(conn_glacier)
+            print "\tTerminated"
 
             # Redirect to check, just in case
-            print "Redirecting to amazon in 5 seconds, check manually!"
+            print "\nRedirecting to amazon in 5 seconds, check manually!"
             sleep(5)
             webbrowser.open('https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#')
             webbrowser.open('https://console.aws.amazon.com/s3/home?region=eu-west-1')
