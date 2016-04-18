@@ -79,3 +79,16 @@ class AutoScale:
             print "You cannot delete an Auto Scaling Group while there are instances still in the group."
             print "Try again later"
             return False
+
+    @staticmethod
+    def delete_everything(conn_as):
+
+        for group in conn_as.get_all_groups():
+            conn_as.delete_policy('scale_up', group.name)
+            conn_as.delete_policy('scale_down', group.name)
+            group.delete(True)
+
+        for launch_config in conn_as.get_all_launch_configurations():
+            launch_config.delete()
+
+

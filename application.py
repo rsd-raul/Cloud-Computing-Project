@@ -161,7 +161,7 @@ class Application:
         # Go back options
         elif action == 13 or action == 120 or action == 1123 or action == 1183 or action == 122 or action == 216 \
             or action == 2123 or action == 226 or action == 2223 or action == 23 or action == 33 or action == 313 \
-                or action == 43 or action == 414 or action == 425:
+                or action == 414 or action == 425:
             self.process_selection(action // 100)
             input_needed = False
 
@@ -796,6 +796,12 @@ class Application:
             print "\nTerminating vaults:\n"
             conn_glacier = Connection.glacier_connection()
             GlacierVaults.terminate_all_vaults(conn_glacier)
+            print "\tTerminated"
+
+            # Terminate all groups, launch configuration and policies
+            print "\nTerminating groups, launch configuration and policies:\n"
+            conn_as = Connection.as_connection()
+            AutoScale.delete_everything(conn_as)
             print "\tTerminated"
 
             # Redirect to check, just in case
