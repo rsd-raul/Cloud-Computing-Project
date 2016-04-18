@@ -1,5 +1,6 @@
 import boto
 import boto.ec2
+import boto.glacier
 from boto import config
 from boto.s3.connection import S3Connection
 import boto.ec2.cloudwatch
@@ -41,5 +42,13 @@ class Connection:
         region_endpoint = 'sns.eu-west-1.amazonaws.com'
         region = SDBRegionInfo(None, region_name, region_endpoint)
         conn = boto.connect_sns(key_id, access_key, region=region)
+
+        return conn
+
+    @staticmethod
+    def glacier_connection():
+        """ Create and return a Glacier Connection """
+
+        conn = boto.glacier.connect_to_region('eu-west-1')
 
         return conn

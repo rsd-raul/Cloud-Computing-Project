@@ -45,8 +45,11 @@ Supported options (X means Active and Tested):
    	    2X   Get metrics
 	2X 	Set an alarm
 
-4  Extras
-    1   Create Glacier Vault
-    2   Terminate *warning
+4X  Extras
+    1X   Glacier Vaults Interface
+        1X   List Vaults
+        2X   Create Vault
+        3X   Delete Vault
+    2X   Terminate *warning
 
 *Terminate shuts down any instances and any volumes associated with the account (key, access), it cannot be undone.

@@ -1,12 +1,15 @@
 from aws.EC2 import EC2Instance
-from openstack.EC2 import EC2InstanceOS
 from aws.Connections import Connection
 from aws.Volumes import Volumes
 from aws.S3 import S3Bucket
+from aws.Glacier import GlacierVaults
+from aws.CloudWatch import CloudWatch
+
+from openstack.EC2 import EC2InstanceOS
 from openstack.S3 import S3BucketOS
+
 from time import sleep
 import webbrowser
-from aws.CloudWatch import CloudWatch
 
 
 class Application:
@@ -57,31 +60,39 @@ class Application:
                 "Activate monitoring (new)",
                 "Get metrics"],
             '4': [
-                "Create Glacier Vault (new)",
-                "Delete everything *warning"]
+                "Glacier Vaults Interface (new)",
+                "Delete everything *warning"],
+            '41': [
+                "List Vaults (new)",
+                "Create Vault (new)",
+                "Delete Vault (new)"]
         }
         self.app_strings = {
+            'starting_app': "\n~~~~~~~~~~ Starting system ~~~~~~~~~\n",
+            'terminated': "\n~~~~~~~~~~~~~ Good Bye ~~~~~~~~~~~~~\n",
+            'terminating': "------ Terminating everything ------",
+            'restart': "\n-------------- Options -------------\n",
             'start': "\n/--------- Starting action --------\\\n",
+            'completed': "\n\\-------- Action completed --------/\n",
             'no_running': "---------- Nothing running ---------",
             'no_selected': "--------- Nothing selected ---------",
             'no_found': "----------- Nothing found ----------",
             'created': "--------- Instance created ---------",
-            'created_vol': "---------- Volume created ----------",
             'selected': "-------- Instances selected --------\n",
-            'terminating': "------ Terminating everything ------",
-            'terminated': "\n------------- Good Bye -------------\n",
-            'restart': "\n------------ Restarting ------------\n",
+            'created_glacier': "------ Glacier Vault created -------",
+            'deleted_glacier': "------ Glacier Vault deleted -------",
+            'created_vol': "---------- Volume created ----------",
             'attached': "---------- Volume attached ---------\n",
             'detached': "---------- Volume detached ---------\n",
             'stored': "------------ File stored -----------",
             'removed': "------------ File removed ----------",
             'downloaded': "---------- File downloaded ---------",
-            'completed': "\n\\-------- Action completed --------/\n",
             'creating_alarm': "---------- Creating alarm ----------\n",
             'created_alarm':  "\n----------- Alarm created ----------",
             'failure_alarm':  "---------- Creation failed ---------"
         }
         # Initialize app with main menu
+        print self.app_strings['starting_app']
         self.process_selection(0)
 
     # --------------------------------------------- MENU & REACTION ----------------------------------------------
@@ -128,11 +139,14 @@ class Application:
             self.show_menu('31')
         elif action == 4:
             self.show_menu('4')
+        elif action == 41:
+            self.show_menu('41')
+            max_val = 4
 
         # Go back options
         elif action == 13 or action == 120 or action == 1123 or action == 1183 or action == 122 or action == 216 \
             or action == 2123 or action == 226 or action == 2223 or action == 23 or action == 33 or action == 313 \
-                or action == 43:
+                or action == 43 or action == 414:
             self.process_selection(action // 100)
             input_needed = False
 
@@ -633,9 +647,32 @@ class Application:
                     else:
                         print self.app_strings['failure_alarm']
 
-        # AWS - Create an Glacier Vault
-        elif action == 41:
-            print "Create an Glacier Vault"
+        # AWS - List all Glacier Vaults
+        elif action == 411:
+            conn_glacier = Connection.glacier_connection()
+
+            vaults = GlacierVaults.list_vaults(conn_glacier)
+
+            if vaults:
+                print "Active Vaults:"
+                for index, vault in enumerate(vaults, 1):
+                    print '\t' + str(index) + ':', 'Name:', vault.name, 'Size:', vault.size,\
+                        'Created in:', vault.creation_date
+            else:
+                print self.app_strings['no_found']
+
+        # AWS - Create / Delete a Glacier Vault
+        elif action == 412 or action == 413:
+            conn_glacier = Connection.glacier_connection()
+
+            name = self.ask_custom_string("Type vault name: ")
+
+            if action == 412:
+                GlacierVaults.create_vault(conn_glacier, name)
+                print self.app_strings['created_glacier']
+            else:
+                GlacierVaults.delete_vault(conn_glacier, name)
+                print self.app_strings['deleted_glacier']
 
         # AWS - Exit -> Terminate all
         elif action == 42:
@@ -658,6 +695,7 @@ class Application:
             sleep(5)
             webbrowser.open('https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#')
             webbrowser.open('https://console.aws.amazon.com/s3/home?region=eu-west-1')
+            webbrowser.open('https://eu-west-1.console.aws.amazon.com/glacier/home?region=eu-west-1')
 
         # The action has been completed
         print self.app_strings['completed']
@@ -665,7 +703,7 @@ class Application:
         # Restart the interface unless you are terminating all AWS instances/volumes/etc
         if action != 42:
             print self.app_strings['restart']
-            self.process_selection(0)
+            self.process_selection(action // 10)
         else:
             print self.app_strings['terminated']
 
