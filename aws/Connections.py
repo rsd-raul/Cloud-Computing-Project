@@ -27,9 +27,6 @@ class Connection:
         """ Create and return an CW Connection """
         conn = boto.connect_cloudwatch()
 
-        # Price by region only supports us-east-1
-        # conn = boto.ec2.cloudwatch.connect_to_region("us-east-1")
-
         return conn
 
     @staticmethod

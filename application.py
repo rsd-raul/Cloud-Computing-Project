@@ -19,7 +19,7 @@ class Application:
                 "Compute",
                 "Storage",
                 "Monitoring",
-                "Terminate *warning"],
+                "Extras"],
             '12': [
                 "AWS",
                 "OpenStack"],
@@ -55,7 +55,10 @@ class Application:
                 "Set an alarm"],
             '31': [
                 "Activate monitoring (new)",
-                "Get metrics"]
+                "Get metrics"],
+            '4': [
+                "Create Glacier Vault (new)",
+                "Delete everything *warning"]
         }
         self.app_strings = {
             'start': "\n/--------- Starting action --------\\\n",
@@ -123,11 +126,13 @@ class Application:
             self.show_menu('3')
         elif action == 31:
             self.show_menu('31')
+        elif action == 4:
+            self.show_menu('4')
 
         # Go back options
-        elif action == 13 or action == 120 or action == 1123 or action == 1183 \
-                or action == 122 or action == 216 or action == 2123 or action == 226 \
-                or action == 2223 or action == 23 or action == 33 or action == 313:
+        elif action == 13 or action == 120 or action == 1123 or action == 1183 or action == 122 or action == 216 \
+            or action == 2123 or action == 226 or action == 2223 or action == 23 or action == 33 or action == 313 \
+                or action == 43:
             self.process_selection(action // 100)
             input_needed = False
 
@@ -145,30 +150,8 @@ class Application:
     def apply_action(self, action):
         print self.app_strings['start']
 
-        # Exit -> Terminate all
-        if action == 4:
-            print self.app_strings['terminating']
-
-            # Start a EC2 connection
-            conn_ec2 = Connection.ec2_connection()
-
-            # Terminate all instances
-            print "\nTerminating instances:\n"
-            EC2Instance.terminate_all_instances(conn_ec2)
-
-            # Terminate all volumes (wait for instances to detach its volumes)
-            print "\nTerminating volumes:\n"
-            sleep(7)
-            Volumes.delete_all_volumes(conn_ec2)
-
-            # Redirect to check, just in case
-            print "Redirecting to amazon in 5 seconds, check manually!"
-            sleep(5)
-            webbrowser.open('https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#')
-            webbrowser.open('https://console.aws.amazon.com/s3/home?region=eu-west-1')
-
         # AWS - List all running instances
-        elif action == 111:
+        if action == 111:
             # Start a EC2 connection
             conn_ec2 = Connection.ec2_connection()
 
@@ -357,9 +340,6 @@ class Application:
         # OS - List all running instances
         elif action == 121:
 
-            # UserWarning: SSL certificate verification is disabled
-            print "Disregard the warning:"
-
             # List All
             nodes = EC2InstanceOS.find_instances_running()
 
@@ -417,7 +397,7 @@ class Application:
             if buckets:
                 # Ask for the bucket name
                 print "\nType the name of the Bucket"
-                bucket_name = self.ask_string()
+                bucket_name = self.ask_custom_string("Type the name: ")
 
                 success = False
                 for bucket in buckets:
@@ -458,8 +438,8 @@ class Application:
                 file_title = self.ask_string()
 
                 if action == 213:
-                    print "Type the location of the file"
-                    file_location = self.ask_string()
+                    print "Type the location of the file (e.g. res/test.txt"
+                    file_location = self.ask_custom_string("Type location: ")
 
                     S3Bucket.store_in_bucket(bucket, file_title, file_location)
                     print self.app_strings['stored']
@@ -484,7 +464,7 @@ class Application:
             buckets = S3BucketOS.list_buckets()
 
             if buckets:
-                print "Current AWS S3 Buckets:"
+                print "Current OS S3 Buckets:"
                 for b in buckets:
                     print "\n\t", b.name
             else:
@@ -497,7 +477,7 @@ class Application:
 
             if buckets:
                 # Show and ask for the bucket
-                print "Current AWS S3 Buckets:"
+                print "\nCurrent OS S3 Buckets:"
                 for index, bucket in enumerate(buckets, 1):
                     print '\t', str(index) + ":", bucket.name
 
@@ -518,10 +498,11 @@ class Application:
         elif action == 2222:
 
             buckets = S3BucketOS.list_buckets()
+
             if buckets:
                 # Ask for the bucket name
                 print "\nType the name of the Bucket"
-                bucket_name = self.ask_string()
+                bucket_name = self.ask_custom_string("Type the name: ")
 
                 success = False
                 for bucket in buckets:
@@ -547,7 +528,7 @@ class Application:
             buckets = S3BucketOS.list_buckets()
             if buckets:
                 # Show and ask for the bucket
-                print "Current AWS S3 Buckets:"
+                print "Current OS S3 Buckets:"
                 for index, bucket in enumerate(buckets, 1):
                     print '\t', str(index) + ":", bucket.name
 
@@ -561,7 +542,7 @@ class Application:
 
                 if action == 223:
                     print "Type the location of the file"
-                    file_location = self.ask_string()
+                    file_location = self.ask_custom_string("Type location: ")
 
                     S3BucketOS.store_in_bucket(bucket, file_title, file_location)
                     print self.app_strings['stored']
@@ -652,17 +633,41 @@ class Application:
                     else:
                         print self.app_strings['failure_alarm']
 
+        # AWS - Create an Glacier Vault
+        elif action == 41:
+            print "Create an Glacier Vault"
+
+        # AWS - Exit -> Terminate all
+        elif action == 42:
+            print self.app_strings['terminating']
+
+            # Start a EC2 connection
+            conn_ec2 = Connection.ec2_connection()
+
+            # Terminate all instances
+            print "\nTerminating instances:\n"
+            EC2Instance.terminate_all_instances(conn_ec2)
+
+            # Terminate all volumes (wait for instances to detach its volumes)
+            print "\nTerminating volumes:\n"
+            sleep(7)
+            Volumes.delete_all_volumes(conn_ec2)
+
+            # Redirect to check, just in case
+            print "Redirecting to amazon in 5 seconds, check manually!"
+            sleep(5)
+            webbrowser.open('https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#')
+            webbrowser.open('https://console.aws.amazon.com/s3/home?region=eu-west-1')
+
+        # The action has been completed
         print self.app_strings['completed']
 
-        if action != 4:
+        # Restart the interface unless you are terminating all AWS instances/volumes/etc
+        if action != 42:
             print self.app_strings['restart']
             self.process_selection(0)
         else:
             print self.app_strings['terminated']
-
-    @staticmethod
-    def place_holder():
-        print "placeholder"
 
     # ------------------------------------------------ USER INPUT ------------------------------------------------
 
@@ -748,10 +753,15 @@ class Application:
     def print_node(index, node):
         result = "\t" + ("" if index == -1 else str(index) + ':')
 
+        # Amazon Web Services
+        # print result, node.id, '-', node.extra['instance_type'], '<' + node.extra['availability'] + \
+        #                                                          '>: <Running since:', node.extra['launch_time'] + '>'
+
+        # OpenStack
+
         # Calculate the machine type based on the flavorId
-        flavours = {'1': "tiny", '2': "small", '3': "medium", '4': "large", '5': "xlarge"}
+        flavours = {'1': "tiny", '2': "small", '3': "medium", '4': "large", '5': "x-large"}
         instance_type = "m1." + str(flavours[node.extra['flavorId']])
 
         print result, node.id, '-', instance_type, '<' + node.extra['availability_zone'] + '>: <Running since:', \
             node.extra['created'] + '>'
-

@@ -1,8 +1,6 @@
-from libcloud.compute.types import Provider
 from libcloud.compute.types import NodeState
-from libcloud.compute.providers import get_driver
-from boto import config
 import libcloud.security
+from openstack.Connections import Connection
 
 
 class EC2InstanceOS:
@@ -18,19 +16,10 @@ class EC2InstanceOS:
         libcloud.security.VERIFY_SSL_CERT = False
 
         # AWS EC2 Driver
-        # key_id = config.get('Credentials', 'aws_access_key_id')
-        # secret_key = config.get('Credentials', 'aws_secret_access_key')
-        # aws_driver = get_driver(Provider.EC2_EU_WEST)
-        # driver = aws_driver(key_id, secret_key)
+        # driver = Connection.ec2_aws_driver()
 
         # OpenStack Driver
-        key_id = config.get('LibCloud', 'username')
-        secret_key = config.get('LibCloud', 'secret_key')
-        auth_url = config.get('LibCloud', 'auth_url')
-
-        provider = get_driver(Provider.OPENSTACK)
-        driver = provider(key_id, secret_key, ex_force_auth_url=auth_url, ex_force_auth_version='2.0_password',
-                          ex_tenant_name=key_id, ex_force_service_region='RegionOne')
+        driver = Connection.ec2_os_driver()
 
         # Get all instances associated with this AWS account
         nodes = driver.list_nodes()

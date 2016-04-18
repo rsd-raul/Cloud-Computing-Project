@@ -1,5 +1,7 @@
 # Cloud-Computing-Project
-Boto/LibCloud to automate AWS related tasks w/ OpenStack
+
+Boto to automate Amazon Web Services
+LibCloud to automate OpenStack and Amazon Web Services (Driver based)
 
 Supported options (X means Active and Tested):
 
@@ -42,3 +44,9 @@ Supported options (X means Active and Tested):
 	    1X   Activate monitoring
    	    2X   Get metrics
 	2X 	Set an alarm
+
+4  Extras
+    1   Create Glacier Vault
+    2   Terminate *warning
+
+*Terminate shuts down any instances and any volumes associated with the account (key, access), it cannot be undone.
