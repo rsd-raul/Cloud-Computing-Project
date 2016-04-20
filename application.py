@@ -19,6 +19,8 @@ class Application:
     # ----------------------------------------------- CONSTRUCTOR ------------------------------------------------
 
     def __init__(self):
+
+        # Menus and sub-menus declaration
         self.menuString = {
             '0': [
                 "Compute",
@@ -77,6 +79,7 @@ class Application:
                 "Create custom Alarm w. AutoScale (new)"
             ]
         }
+        # Interface related strings
         self.app_strings = {
             'starting_app': "\n~~~~~~~~~~ Starting system ~~~~~~~~~\n",
             'terminated': "\n~~~~~~~~~~~~~ Good Bye ~~~~~~~~~~~~~\n",
@@ -110,17 +113,27 @@ class Application:
     # --------------------------------------------- MENU & REACTION ----------------------------------------------
 
     def show_menu(self, key):
+        """ Based on the unique key that identifies the menu, show it """
+
+        # Retrieve the menu from the menu list
         menu = self.menuString[key]
 
+        # Iterate over all the options and show an index besides
         for index, value in enumerate(menu, 1):
             print index, value
 
+        # Unless we are in the main menu, show a "Go back" button
         if key != '0':
             print ('%s Go back' % (len(menu)+1))
 
     def process_selection(self, action):
+        """ Based on the user input, this method decides how to proceed (show menu / do action) """
+
+        # In case of a menu, input_needed will request the user for one of the options on the menu list
         input_needed = True
-        max_val = 3             # Most frequent max value
+
+        # Number of options in each menu, initialized to 3 as it's the most frequent value
+        max_val = 3
 
         # Main menu
         if action == 0:
@@ -163,11 +176,13 @@ class Application:
         elif action == 13 or action == 120 or action == 1123 or action == 1183 or action == 122 or action == 216 \
             or action == 2123 or action == 226 or action == 2223 or action == 23 or action == 33 or action == 313 \
                 or action == 44 or action == 414 or action == 425:
+            # If it's a go back option divide the "action" by 100 without rest, that will effectively bring you back
             self.process_selection(action // 100)
             input_needed = False
 
         # Actions
         else:
+            # If it's not a "menu/sub-menu" or a "go back" option, it's an action, execute it
             self.apply_action(action)
             input_needed = False
 
@@ -178,94 +193,90 @@ class Application:
     # -------------------------------------------------- ACTIONS -------------------------------------------------
 
     def apply_action(self, action):
+        """ Depending on the user action request, this method will execute the suitable code/functionality """
+
         print self.app_strings['start']
 
-        # AWS - List all running instances
-        if action == 111:
+        # AWS - List all running instances / Choose from list / Enter an instance ID
+        if action == 111 or action == 1121 or action == 1122:
             # Start a EC2 connection
             conn_ec2 = Connection.ec2_connection()
 
-            # List All
+            # Find all running instances
             instances = EC2Instance.find_instances_running(conn_ec2)
 
+            # If there is nothing running, inform the user
             if not instances:
                 print self.app_strings['no_running']
+
+            # If there are instances running, react depending of the user choice
             else:
-                # Format and print the requested information
-                print "Running AWS EC2 instances"
-                for index, instance in enumerate(instances):
-                    self.print_instance(index, instance)
+                # 111 - List all
+                if action == 111:
+                    # Format and print the requested information
+                    print "Running AWS EC2 instances"
+                    for index, instance in enumerate(instances):
+                        # This method will be tasked with the extraction and formatting of the instance attributes
+                        self.print_instance(index, instance)
 
-        # AWS - List some of the running instances - Choose from list
-        elif action == 1121:
-            # Start a EC2 connection
-            conn_ec2 = Connection.ec2_connection()
+                # 1121 - Choose from list
+                elif action == 1121:
+                    # Show index and id for the user to select the desired ones
+                    print "Running AWS EC2 instances:\n"
+                    for index, instance in enumerate(instances, 1):
+                        print index, ':', instance.id
 
-            # Retrieve all actives
-            instances = EC2Instance.find_instances_running(conn_ec2)
+                    # Ask for the desired instances
+                    print "\nType the number/s (separated by spaces)"
+                    numbers = self.ask_multiple_options(len(instances))
 
-            # If none, exit
-            if not instances:
-                print self.app_strings['no_running']
-            else:
-                # Show index and id for the user to select the desired ones
-                print "Running AWS EC2 instances:\n"
-                for index, instance in enumerate(instances, 1):
-                    print index, ':', instance.id
+                    # Format and print
+                    for index in numbers:
+                        instance = instances[index]
+                        self.print_instance(index, instance)
 
-                # Ask for the desired instances
-                print "\nType the number/s (separated by spaces)"
-                numbers = self.ask_multiple_options(len(instances))
+                # 1122 - Enter an instance ID
+                else:
+                    # Request the instance Id
+                    inst_id = self.ask_string()
 
-                # Format and print
-                for index in numbers:
-                    instance = instances[index]
-                    self.print_instance(index, instance)
-
-        # AWS - List some of the running instances - Enter an instance ID
-        elif action == 1122:
-            # Start a EC2 connection
-            conn_ec2 = Connection.ec2_connection()
-
-            # Retrieve all actives
-            instances = EC2Instance.find_instances_running(conn_ec2)
-
-            # If none, exit
-            if not instances:
-                print self.app_strings['no_running']
-            else:
-                inst_id = self.ask_string()
-
-                something = False
-                for instance in instances:
-                    if instance.id == inst_id:
-                        if not something:
+                    something = False
+                    # Iterate over all the instances looking for the requested one (by id)
+                    for instance in instances:
+                        if instance.id == inst_id:
+                            # If the instance is found, format and print it, then exit the loop
                             print self.app_strings['selected']
-                        self.print_instance(-1, instance)
-                        something = True
+                            self.print_instance(-1, instance)
+                            something = True
+                            break
 
-                if not something:
-                    print self.app_strings['no_selected']
+                    # If no instances where found, inform the user
+                    if not something:
+                        print self.app_strings['no_selected']
 
         # AWS - Start a new instance based on an existing AMI
         elif action == 113:
             # Start a EC2 connection
             conn_ec2 = Connection.ec2_connection()
 
+            # Keep asking for a correct ami until it's correctly introduced
             success = False
             while not success:
                 try:
+                    # Ask the user for the ami
                     ami = self.ask_custom_string("Type the ami: ")
 
-                    # Launch the new instance
+                    # Launch the new instance based on the ami
                     EC2Instance.create_instance_with_ami(conn_ec2, ami)
+
                     print self.app_strings['created']
-
                     success = True
-                except exception.EC2ResponseError:
-                    print "Invalid id: " + "'ami'" + " (expecting 'ami-...')\n"
 
-        # AWS - Stop all instances
+                # If an exception is raised, notify the user of the incorrect ami format and ask again
+                except exception.EC2ResponseError:
+                    print "Invalid id, expecting 'ami-...'\n"
+
+        # AWS - Stop all instances / a specific instance
         elif action == 114:
             # Start a EC2 connection
             conn_ec2 = Connection.ec2_connection()
@@ -281,7 +292,7 @@ class Application:
             # Ask for the instance id
             instance_id = self.ask_string()
 
-            # Stop the running instance
+            # Stop the running instance based on the id
             EC2Instance.stop_instance(conn_ec2, instance_id)
 
         # AWS - Create a new volume
@@ -294,14 +305,15 @@ class Application:
             if success:
                 print self.app_strings['created_vol']
 
-        # AWS - Attach an existing volume to an instance
-        elif action == 116:
+        # AWS - Attach/Detach an existing volume to/from an instance
+        elif action == 116 or action == 117:
             # Start a EC2 connection
             conn_ec2 = Connection.ec2_connection()
 
-            # Get all volumes
+            # Find all volumes
             volumes = Volumes.list_volumes(conn_ec2)
 
+            # if there are running volumes
             if volumes:
                 # Show and ask for the volume
                 print "Volumes available:"
@@ -310,84 +322,79 @@ class Application:
 
                 print "\nType the number of the Volume to attach:"
                 volume_num = self.ask_option(len(volumes))
+
+                # Retrieve the volume from the list and extract the required id
                 volume = volumes[volume_num - 1]
-                volume_zone = volume.zone
                 volume_id = volume.id
 
-                # Get all instances
-                instances = EC2Instance.find_instances_running_zone(conn_ec2, volume_zone)
+                # 116 Attach an existing volume to an instance
+                if action == 116:
+                    # Extract the zone
+                    volume_zone = volume.zone
 
-                if instances:
-                    # Show and ask for the instance
-                    print "Instances available:"
-                    for index, instance in enumerate(instances, 1):
-                        print '\t', index, 'Id:', instance.id, 'Zone', instance.placement, 'State:', instance.state
+                    # Get all instances in the volume zone (different zones are incompatible)
+                    instances = EC2Instance.find_instances_running_zone(conn_ec2, volume_zone)
 
-                    print "\nType the number of the Instance to attach the Volume:", volume_id
-                    instance_num = self.ask_option(len(instances))
-                    instance_id = instances[instance_num - 1].id
+                    # If there are instances
+                    if instances:
+                        # Show the list of instances with an index for the user to choose from
+                        print "Instances available:"
+                        for index, instance in enumerate(instances, 1):
+                            print '\t', index, 'Id:', instance.id, 'Zone', instance.placement, 'State:', instance.state
 
-                    # Attach and notify
-                    success = Volumes.attach_volume(conn_ec2, volume_id, instance_id)
-                    if success:
-                        print self.app_strings['attached']
+                        # Ask for the instance and retrieve the instance id
+                        print "\nType the number of the Instance to attach the Volume:", volume_id
+                        instance_num = self.ask_option(len(instances))
+                        instance_id = instances[instance_num - 1].id
+
+                        # Attach the volume and notify if the operation was successful
+                        success = Volumes.attach_volume(conn_ec2, volume_id, instance_id)
+                        if success:
+                            print self.app_strings['attached']
+
+                    # Notify the user if there are no instances running in the volume's zone
+                    else:
+                        print "\nYou need running instances in the zone: ", volume_zone, \
+                              "\nto perform the attach operation"
+
+                # 117 Detach a volume from an instance
                 else:
-                    print "\nYou need running instances in the zone:\n", volume_zone, \
-                          "to perform the attach operation"
+                    # Detach the volume with the id provided by the user and notify if the operation is successful
+                    success = Volumes.detach_volume(conn_ec2, volume_id)
+                    if success:
+                        print self.app_strings['detached']
+
+            # If there are no running volumes, notify the user
             else:
                 print "\nYou need running volumes\n" \
-                      "to perform the attach operation"
-
-        # AWS - Detach a volume from an instance
-        elif action == 117:
-            # Start a EC2 connection
-            conn_ec2 = Connection.ec2_connection()
-
-            # Get all volumes
-            volumes = Volumes.list_volumes(conn_ec2)
-
-            if volumes:
-                # Show and ask for the volume
-                print "Volumes available"
-                for index, volume in enumerate(volumes, 1):
-                    print '\t', index, 'Id:', volume.id, 'Status:', volume.status
-
-                print "\nType the number of the Volume to detach:"
-                volume_num = self.ask_option(len(volumes))
-                volume_id = volumes[volume_num-1].id
-
-                # Detach and notify
-                success = Volumes.detach_volume(conn_ec2, volume_id)
-                if success:
-                    print self.app_strings['detached']
-
-            else:
-                print "There are no detachable volumes"
+                      "to perform the operation"
 
         # AWS - Launch a new instance - Windows instance / Linux instance
         elif action == 1181 or action == 1182:
             # Start a EC2 connection
             conn_ec2 = Connection.ec2_connection()
 
+            # Depending on the request, apply for a windows or a linux machine
             so = "windows" if action == 1181 else "linux"
 
-            # Stop the running instance
+            # Create a new instance passing the os request as a parameter
             EC2Instance.create_instance_with_so(conn_ec2, so)
-
             print self.app_strings['created']
 
         # OS - List all running instances
         elif action == 121:
 
-            # List All
+            # List all running instances
             nodes = EC2InstanceOS.find_instances_running()
 
+            # If nothing is running, notify the user
             if not nodes:
                 print self.app_strings['no_running']
             else:
-                # Format and print the requested information
+                # Format and print the retrieved instances
                 print "\nRunning AWS EC2 nodes"
                 for index, node in enumerate(nodes):
+                    # This method will print the requested attributes from each of the nodes (instances)
                     self.print_node(index, node)
 
         # AWS - List all buckets
@@ -395,11 +402,15 @@ class Application:
             # Start a S3 connection
             conn_s3 = Connection.s3_connection()
 
+            # Retrieve all the buckets
             buckets = S3Bucket.list_buckets(conn_s3)
+
+            # If there are buckets, print them with a custom format
             if buckets:
                 print "Current AWS S3 Buckets:"
                 for b in buckets:
                     print "\n\t", b.name
+            # If not, notify the user
             else:
                 print self.app_strings['no_found']
 
@@ -408,9 +419,12 @@ class Application:
             # Start a S3 connection
             conn_s3 = Connection.s3_connection()
 
+            # Retrieve all the buckets
             buckets = S3Bucket.list_buckets(conn_s3)
+
+            # If there are buckets
             if buckets:
-                # Show and ask for the bucket
+                # Show them all and ask for the index of the desired one
                 print "Current AWS S3 Buckets:"
                 for index, bucket in enumerate(buckets, 1):
                     print '\t', str(index) + ":", bucket.name
@@ -418,12 +432,19 @@ class Application:
                 print "\nType the number of the Bucket"
                 bucket_num = self.ask_option(len(buckets))
 
+                # Retrieve all objects in the bucket
                 bucket_objects = buckets[bucket_num - 1].list()
+
+                # If the bucket have object, print them (their name)
                 if bucket_objects:
+                    print "The objects in the bucket are:"
                     for bucket_object in bucket_objects:
                         print '\t' + str(bucket_object.key)
+                # If no objects are found, notify the user
                 else:
                     print self.app_strings['no_found']
+
+            # If no buckets are found, notify the user
             else:
                 print self.app_strings['no_found']
 
@@ -432,7 +453,10 @@ class Application:
             # Start a S3 connection
             conn_s3 = Connection.s3_connection()
 
+            # Retrieve all the buckets
             buckets = S3Bucket.list_buckets(conn_s3)
+
+            # TODO HERE WE ARE
             if buckets:
                 # Ask for the bucket name
                 print "\nType the name of the Bucket"
@@ -926,13 +950,20 @@ class Application:
 
     @staticmethod
     def print_instance(index, instance):
-        result = "\t" + ("" if index == -1 else str(index) + ':')
+        """ This method is tasked with the extraction and formatting of the instance attributes """
 
-        print result, instance.id, '-', instance.instance_type, '<' + str(instance.region) + \
+        # Print the index with the correct format if the index is available
+        index_str = "\t" + ("" if index == -1 else str(index) + ':')
+
+        # Print each of the requested instance attributes
+        print index_str, instance.id, '-', instance.instance_type, '<' + str(instance.region) + \
             '>: <Running since:', str(instance.launch_time) + '>'
 
     @staticmethod
     def print_node(index, node):
+        """ This method is tasked with the extraction and formatting of the instance attributes, as
+         LibCloud supports many different Cloud Services, the AWS formatting is also provided """
+
         result = "\t" + ("" if index == -1 else str(index) + ':')
 
         # Amazon Web Services
@@ -945,5 +976,6 @@ class Application:
         flavours = {'1': "tiny", '2': "small", '3': "medium", '4': "large", '5': "x-large"}
         instance_type = "m1." + str(flavours[node.extra['flavorId']])
 
+        # Print each of the requested instance attributes
         print result, node.id, '-', instance_type, '<' + node.extra['availability_zone'] + '>: <Running since:', \
             node.extra['created'] + '>'

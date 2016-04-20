@@ -106,7 +106,7 @@ class EC2Instance:
             for instance in stopped:
                 print "Stopping instance with id:", instance.id
         except exception.EC2ResponseError:
-            print "Incorrect id format"
+            print "Incorrect id format, try again"
 
     @staticmethod
     def terminate_instance(conn, instance_id):

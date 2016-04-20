@@ -1,11 +1,13 @@
 # Cloud Computing Project w. Python
 
 Description:
-    This project objective is to learn how to control and manage Cloud Computing platforms such as Amazon Web Services
-    or OpenStack based ones with Python. By using pre-developed scripts, administrator menus and automating processes
-    we can precisely control and take advantage of the power of the cloud and the versatility and scalability it offers.
 
-    As this is a education-oriented project, methods and functions will be explained for better comprehension.
+    This project objective is to learn how to control and manage Cloud Computing platforms such as Amazon
+    Web Services or OpenStack based ones with Python. By using pre-developed scripts, administrator menus
+    and automating processes we can precisely control and take advantage of the power of the cloud and
+    the versatility and scalability it offers.
+
+    As this is a education-oriented project, code will be explained for better comprehension.
 
 Libraries:
 
@@ -18,7 +20,7 @@ Setup:
 
     Download boto:       https://github.com/boto/boto
     Download libcloud:   https://libcloud.apache.org/downloads.html
-        * Follow the instructions or simply cd into both folders using cmd and execute "python setup.py install"
+        *Follow the instructions or cd into both folders using cmd and execute "python setup.py install"
 
     Setup a boto.config file with exactly this variables (substitute when necessary):
             [Credentials]
@@ -102,8 +104,9 @@ Menus & actions:
 
 Disclaimer:
 
-    This project is based and tested against AWS eu-west-1 regions, while other regions are very likely to behave
-    correctly, this is not warranted or directly supported by the developer.
+    This project is based and tested against AWS eu-west-1 regions, while other regions are very likely
+    to behave correctly, this is not warranted or directly supported by the developer.
 
-    The "Terminate" method located under "Extras" shuts down any instances, volumes, vaults, auto scale groups,
-    launch configurations and policies associated with the active AWS account and cannot be undone.
+    The "Terminate" method located under "Extras" shuts down any instances, volumes, vaults, auto scale
+    groups, launch configurations and policies associated with the active AWS account and cannot be
+    undone.
