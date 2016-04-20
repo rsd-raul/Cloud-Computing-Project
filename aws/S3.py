@@ -28,8 +28,6 @@ class S3Bucket:
         """ Store a file inside a Bucket """
 
         k = Key(bucket)
-        # k.key = 'testing.txt'
-        # k.set_contents_from_filename('res/text.txt')
         k.key = file_title
         k.set_contents_from_filename(file_location)
 

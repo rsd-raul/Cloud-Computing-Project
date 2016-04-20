@@ -9,6 +9,7 @@ from aws.AutoScale import AutoScale
 from openstack.EC2 import EC2InstanceOS
 from openstack.S3 import S3BucketOS
 
+from boto import exception
 from time import sleep
 import webbrowser
 
@@ -161,7 +162,7 @@ class Application:
         # Go back options
         elif action == 13 or action == 120 or action == 1123 or action == 1183 or action == 122 or action == 216 \
             or action == 2123 or action == 226 or action == 2223 or action == 23 or action == 33 or action == 313 \
-                or action == 414 or action == 425:
+                or action == 44 or action == 414 or action == 425:
             self.process_selection(action // 100)
             input_needed = False
 
@@ -251,10 +252,19 @@ class Application:
             # Start a EC2 connection
             conn_ec2 = Connection.ec2_connection()
 
-            # Launch the new instance
-            EC2Instance.create_instance(conn_ec2)
+            success = False
+            while not success:
+                try:
+                    ami = self.ask_custom_string("Type the ami: ")
 
-            print self.app_strings['created']
+                    # Launch the new instance
+                    EC2Instance.create_instance_with_ami(conn_ec2, ami)
+                    print self.app_strings['created']
+
+                    success = True
+                except exception.EC2ResponseError:
+                    print "Invalid id: " + "'ami'" + " (expecting 'ami-...')\n"
+
         # AWS - Stop all instances
         elif action == 114:
             # Start a EC2 connection

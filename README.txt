@@ -1,61 +1,109 @@
-# Cloud-Computing-Project
+# Cloud Computing Project w. Python
 
-Boto to automate Amazon Web Services
-LibCloud to automate OpenStack and Amazon Web Services (Driver based)
+Description:
+    This project objective is to learn how to control and manage Cloud Computing platforms such as Amazon Web Services
+    or OpenStack based ones with Python. By using pre-developed scripts, administrator menus and automating processes
+    we can precisely control and take advantage of the power of the cloud and the versatility and scalability it offers.
 
-Supported options (X means Active and Tested):
+    As this is a education-oriented project, methods and functions will be explained for better comprehension.
 
-1X	Compute
-	1X	AWS
-		1X	List all running instances
-		2X	List some of the running instances
-			1X 	Choose from list
-			2X 	Enter an instance ID
-		3X	Start a new instance based on an existing AMI
-		4X	Stop all instances
-		5X	Stop a specific instance
-		6X	Attach an existing volume to an instance
-		7X	Detach a volume from an instance
-		8X	Launch a new instance
-			1X 	Windows instance
-			2X 	Linux instance
-		9X	Create volume
-	2X	OpenStack
-		1X	List all running instances
-2X	Storage
-	1X	AWS
-		1X	List all buckets
-		2X	List all objects in a bucket
-			1X 	Choose from list 	
-			2X 	Enter a bucket name
-		3X	Upload an object
-		4X	Download an object
-		5X	Delete an object
-	2X	OpenStack
-		1X	List all buckets
-		2X	List all objects in a bucket
-			1X 	Choose from list
-			2X 	Enter a bucket name
-		3X	Upload an object
-		4X	Download an object
-		5X	Delete an object
-3X	Monitoring
-	1X 	Performance metrics for a EC2 instance
-	    1X  Activate monitoring
-   	    2X  Get metrics
-	2X 	Set an alarm
+Libraries:
 
-4X  Extras
-    1X  Glacier Vaults Interface
-        1X  List Vaults
-        2X  Create Vault
-        3X  Delete Vault
-    2X   AutoScaling Interface
-        1X  Testing connection
-        2X  Create AutoScaling Group
-        3X  Delete AutoScaling Group
-        4X  Create Scaling policies (up and down)
-        5X  Create Alarm
-    3X   Terminate *warning
+    Boto to automate Amazon Web Services
+    LibCloud to automate both OpenStack and Amazon Web Services (Driver based)
 
-*Terminate shuts down any instances, any volumes and any vaults associated with the account. (cannot be undone)
+Setup:
+
+    Download and install python:     https://www.python.org/downloads/
+
+    Download boto:       https://github.com/boto/boto
+    Download libcloud:   https://libcloud.apache.org/downloads.html
+        * Follow the instructions or simply cd into both folders using cmd and execute "python setup.py install"
+
+    Setup a boto.config file with exactly this variables (substitute when necessary):
+            [Credentials]
+            aws_access_key_id = <YOUR KEY ID>
+            aws_secret_access_key = <YOUR ACCESS KEY>
+            region = eu-west-1
+
+            [Boto]
+            cloudwatch_region_name = eu-west-1
+            cloudwatch_region_endpoint = monitoring.eu-west-1.amazonaws.com
+            autoscale_endpoint = autoscaling.eu-west-1.amazonaws.com
+
+            [LibCloud]
+            username = <YOUR USERNAME>
+            secret_key = <YOUR SECRET KEY>
+            auth_url = http://128.136.179.2:5000
+
+    Enter cmd, cd into the project folder and execute "python main.py"
+        * A quick test will be shown to make sure boto.config is correctly setup
+
+    Optionally:
+        Import the project in you IDE of choice (Ideally PyCharm by JetBrains)
+        Execute main.py (right click - Run)
+
+Menus & actions:
+
+    1	Compute
+        1	AWS
+            1	List all running instances
+            2	List some of the running instances
+                1X 	Choose from list
+                2X 	Enter an instance ID
+            3	Start a new instance based on an existing AMI
+            4	Stop all instances
+            5	Stop a specific instance
+            6	Attach an existing volume to an instance
+            7	Detach a volume from an instance
+            8	Launch a new instance
+                1 	Windows instance
+                2 	Linux instance
+            9	Create volume
+        2	OpenStack
+            1	List all running instances
+
+    2	Storage
+        1	AWS
+            1	List all buckets
+            2	List all objects in a bucket
+                1 	Choose from list
+                2 	Enter a bucket name
+            3	Upload an object
+            4	Download an object
+            5	Delete an object
+        2	OpenStack
+            1	List all buckets
+            2	List all objects in a bucket
+                1 	Choose from list
+                2 	Enter a bucket name
+            3	Upload an object
+            4	Download an object
+            5	Delete an object
+
+    3	Monitoring
+        1 	Performance metrics for a EC2 instance
+            1   Activate monitoring
+            2   Get metrics
+        2 	Set an alarm
+
+    4  Extras
+        1  Glacier Vaults Interface
+            1   List Vaults
+            2   Create Vault
+            3   Delete Vault
+        2   AutoScaling Interface
+            1   Testing connection
+            2   Create AutoScaling Group
+            3   Delete AutoScaling Group
+            4   Create Scaling policies (up and down)
+            5   Create Alarm
+        3   Terminate *warning
+
+Disclaimer:
+
+    This project is based and tested against AWS eu-west-1 regions, while other regions are very likely to behave
+    correctly, this is not warranted or directly supported by the developer.
+
+    The "Terminate" method located under "Extras" shuts down any instances, volumes, vaults, auto scale groups,
+    launch configurations and policies associated with the active AWS account and cannot be undone.
