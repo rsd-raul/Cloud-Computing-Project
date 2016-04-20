@@ -27,9 +27,14 @@ class S3Bucket:
     def store_in_bucket(bucket, file_title, file_location):
         """ Store a file inside a Bucket """
 
-        k = Key(bucket)
-        k.key = file_title
-        k.set_contents_from_filename(file_location)
+        try:
+            k = Key(bucket)
+            k.key = file_title
+            k.set_contents_from_filename(file_location)
+            return True
+        except OSError:
+            print "The file does not exist"
+            return False
 
     @staticmethod
     def delete_from_bucket(bucket, file_title):

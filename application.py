@@ -519,10 +519,10 @@ class Application:
                     print "Type the location of the file (e.g. res/test.txt"
                     file_location = self.ask_custom_string("Type location: ")
 
-                    # Store in the bucket the file with the title provided and from the location
-                    S3Bucket.store_in_bucket(bucket, file_title, file_location)
-                    # TODO comprobar que esto no falla si introduces una ruta incorrecta
-                    print self.app_strings['stored']
+                    # Store in the bucket the file with the title provided and from the location given
+                    success = S3Bucket.store_in_bucket(bucket, file_title, file_location)
+                    if success:
+                        print self.app_strings['stored']
 
                 # 214 Download an object
                 elif action == 214:
@@ -553,7 +553,7 @@ class Application:
 
             # If there are buckets
             if buckets:
-                print "Current OS S3 Buckets:"
+                print "\nCurrent OS S3 Buckets:"
                 for b in buckets:
                     print "\n\t", b.name
 
@@ -927,17 +927,21 @@ class Application:
             print "\nRedirecting to amazon in 5 seconds, check manually!"
             sleep(5)
             webbrowser.open('https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#')
+            sleep(1)
             webbrowser.open('https://console.aws.amazon.com/s3/home?region=eu-west-1')
+            sleep(1)
             webbrowser.open('https://eu-west-1.console.aws.amazon.com/glacier/home?region=eu-west-1')
-            webbrowser.open(
-                'https://eu-west-1.console.aws.amazon.com/ec2/autoscaling/home?region=eu-west-1#LaunchConfigurations:')
-            webbrowser.open(
-                'eu-west-1.console.aws.amazon.com/ec2/autoscaling/home?region=eu-west-1#AutoScalingGroups:view=details')
+            sleep(1)
+            webbrowser.open('https://eu-west-1.console.aws.amazon.com/ec2/autoscaling/home?region=eu-west-1#'
+                            'LaunchConfigurations:')
+            sleep(1)
+            webbrowser.open('https://eu-west-1.console.aws.amazon.com/ec2/autoscaling/home?region=eu-west-1#'
+                            'AutoScalingGroups:')
 
         # Notify the user the action has been completed
         print self.app_strings['completed']
 
-        # Restart the interface unless you are terminating all AWS instances/volumes/etc
+        # Restart the previous menu unless you are terminating all AWS instances/volumes/etc
         if action != 42:
             print self.app_strings['restart']
             self.process_selection(action // 10)
@@ -948,6 +952,8 @@ class Application:
 
     @staticmethod
     def ask_string():
+        """ Ask for a string id, must be composed of more than 1 character """
+
         valid = False
         result = ""
 
@@ -961,6 +967,8 @@ class Application:
 
     @staticmethod
     def ask_custom_string(question):
+        """ Ask for a string with a custom question, the user input must be only one word"""
+
         valid = False
         result = ""
 
@@ -974,6 +982,8 @@ class Application:
 
     @staticmethod
     def ask_option(max_val):
+        """ Ask for a number, must be more than 0 and less than the max value established by the request"""
+
         valid = False
         option = -1
 
@@ -990,6 +1000,9 @@ class Application:
 
     @staticmethod
     def ask_custom_int(question, min_val, max_val):
+        """ Ask for a number with a custom question, the number must be more than the minimum value and
+        less than the maximum value established by the request"""
+
         valid = False
         option = -1
 
@@ -1006,6 +1019,9 @@ class Application:
 
     @staticmethod
     def ask_multiple_options(max_val):
+        """ Ask for several numbers, the size number list must be lower than the maximum value established
+        all individual numbers must be lower/equal to the max value and bigger than 0"""
+
         valid = False
         list_values = []
 
@@ -1023,7 +1039,7 @@ class Application:
                     # Unless one of the values is bigger (or equal, remember the -1 in the loop) than the max value
                     for value in list_values:
                         if value < 0 or value >= max_val:
-                            raise ValueError('number must be lower/equal to the max index')
+                            raise ValueError('number must be lower/equal to the max index and bigger than 0')
 
             except ValueError:
                 valid = False
