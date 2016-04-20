@@ -175,7 +175,7 @@ class Application:
         # Go back options
         elif action == 13 or action == 120 or action == 1123 or action == 1183 or action == 122 or action == 216 \
             or action == 2123 or action == 226 or action == 2223 or action == 23 or action == 33 or action == 313 \
-                or action == 44 or action == 414 or action == 425:
+                or action == 44 or action == 414 or action == 426:
             # If it's a go back option divide the "action" by 100 without rest, that will effectively bring you back
             self.process_selection(action // 100)
             input_needed = False
@@ -456,17 +456,21 @@ class Application:
             # Retrieve all the buckets
             buckets = S3Bucket.list_buckets(conn_s3)
 
-            # TODO HERE WE ARE
+            # If there are buckets
             if buckets:
                 # Ask for the bucket name
                 print "\nType the name of the Bucket"
                 bucket_name = self.ask_custom_string("Type the name: ")
 
+                # Iterate over the buckets looking for a match in names
                 success = False
                 for bucket in buckets:
                     if bucket.name == bucket_name:
                         success = True
+
+                        # If the bucket is found retrieve its files and print them (Their name
                         bucket_objects = bucket.list()
+                        print "The objects in the bucket are:"
                         for bucket_object in bucket_objects:
                             print '\t' + str(bucket_object.key)
 
@@ -474,9 +478,14 @@ class Application:
                         if not bucket_objects:
                             print self.app_strings['no_found']
 
-                # If there is no bucket with that name, warn the user
+                        # As the bucket name must be unique, break from the loop
+                        break
+
+                # If there are no bucket with that name, warn the user
                 if not success:
                     print self.app_strings['no_found']
+
+            # If there are no bucket, warn the user
             else:
                 print self.app_strings['no_found']
 
@@ -485,110 +494,117 @@ class Application:
             # Start a S3 connection
             conn_s3 = Connection.s3_connection()
 
+            # Retrieve all the buckets
             buckets = S3Bucket.list_buckets(conn_s3)
+
+            # If there are buckets
             if buckets:
-                # Show and ask for the bucket
+                # Show all the buckets with an index and ask the user to select one
                 print "Current AWS S3 Buckets:"
                 for index, bucket in enumerate(buckets, 1):
                     print '\t', str(index) + ":", bucket.name
 
+                # Ask the user for the index and retrieve the bucket with it
                 print "\nType the number of the Bucket"
                 bucket_num = self.ask_option(len(buckets))
-
                 bucket = buckets[bucket_num - 1]
 
+                # Ask for the identifier of the file and depending on the requested action delete/upload/download it.
                 print "Type the identifier of the file"
                 file_title = self.ask_string()
 
+                # 213 Upload an object
                 if action == 213:
+                    # Ask for the location of the file to upload
                     print "Type the location of the file (e.g. res/test.txt"
                     file_location = self.ask_custom_string("Type location: ")
 
+                    # Store in the bucket the file with the title provided and from the location
                     S3Bucket.store_in_bucket(bucket, file_title, file_location)
+                    # TODO comprobar que esto no falla si introduces una ruta incorrecta
                     print self.app_strings['stored']
 
+                # 214 Download an object
                 elif action == 214:
+                    # Search among the bucket files for one with the title typed by the user
                     for key in bucket.list():
                         if key.name == file_title:
+                            # If found, download it to res/... and notify the user
                             print "Downloading to res/\n"
                             key.get_contents_to_filename('res/' + key.name)
                             print self.app_strings['downloaded']
 
+                # 215 Delete an object
                 else:
+                    # Delete the file from the bucket using its name and notify the user
                     S3Bucket.delete_from_bucket(bucket, file_title)
 
                     print self.app_strings['removed']
+
+            # If there are no bucket, warn the user
             else:
                 print self.app_strings['no_found']
 
         # OS - List all buckets
         elif action == 221:
 
+            # Retrieve all buckets
             buckets = S3BucketOS.list_buckets()
 
+            # If there are buckets
             if buckets:
                 print "Current OS S3 Buckets:"
                 for b in buckets:
                     print "\n\t", b.name
-            else:
-                print self.app_strings['no_found']
 
-        # OS - List all objects in a bucket - Choose from list
-        elif action == 2221:
-
-            buckets = S3BucketOS.list_buckets()
-
-            if buckets:
-                # Show and ask for the bucket
-                print "\nCurrent OS S3 Buckets:"
-                for index, bucket in enumerate(buckets, 1):
-                    print '\t', str(index) + ":", bucket.name
-
-                print "\nType the number of the Bucket"
-                bucket_num = self.ask_option(len(buckets))
-
-                bucket_objects = buckets[bucket_num - 1].list_objects()
-
-                if bucket_objects:
-                    for bucket_object in bucket_objects:
-                        print '\t' + bucket_object.name
-                else:
-                    print self.app_strings['no_found']
+            # If there are no bucket, warn the user
             else:
                 print self.app_strings['no_found']
 
         # OS - List all objects in a bucket - Enter a bucket name
         elif action == 2222:
 
+            # Retrieve all buckets
             buckets = S3BucketOS.list_buckets()
 
+            # If there are buckets
             if buckets:
                 # Ask for the bucket name
                 print "\nType the name of the Bucket"
                 bucket_name = self.ask_custom_string("Type the name: ")
 
+                # Iterate all the buckets looking for a name match
                 success = False
                 for bucket in buckets:
                     if bucket.name == bucket_name:
                         success = True
                         bucket_objects = bucket.list_objects()
-                        for bucket_object in bucket_objects:
-                            print '\t' + bucket_object.name
+
+                        # If there are files, list them with a customized format
+                        if bucket_objects:
+                            print "The objects in the bucket are:"
+                            for bucket_object in bucket_objects:
+                                print '\t' + bucket_object.name
 
                         # If there are no files, warn the user
-                        if not bucket_objects:
+                        else:
                             print self.app_strings['no_found']
 
                 # If there is no bucket with that name, warn the user
                 if not success:
                     print self.app_strings['no_found']
+
+            # If there are no buckets, warn the user
             else:
                 print self.app_strings['no_found']
 
-        # OS - Upload / Download / Delete an object
-        elif action == 223 or action == 224 or action == 225:
+        # OS - Upload / Download / Delete an object / List all objects
+        elif action == 223 or action == 224 or action == 225 or action == 2221:
 
+            # Retrieve all buckets
             buckets = S3BucketOS.list_buckets()
+
+            # If there are buckets
             if buckets:
                 # Show and ask for the bucket
                 print "Current OS S3 Buckets:"
@@ -598,34 +614,63 @@ class Application:
                 print "\nType the number of the Bucket"
                 bucket_num = self.ask_option(len(buckets))
 
-                bucket = buckets[bucket_num - 1]
+                # 2221 List all objects in a bucket
+                if action == 2221:
+                    # Retrieve all files in the bucket
+                    bucket_objects = buckets[bucket_num - 1].list_objects()
 
-                print "Type the identifier of the file"
-                file_title = self.ask_string()
+                    # If there are files, list them with a customized format
+                    if bucket_objects:
+                        for bucket_object in bucket_objects:
+                            print '\t' + bucket_object.name
 
-                if action == 223:
-                    print "Type the location of the file"
-                    file_location = self.ask_custom_string("Type location: ")
+                    # If there are no files in the bucket, warn the user
+                    else:
+                        print self.app_strings['no_found']
 
-                    S3BucketOS.store_in_bucket(bucket, file_title, file_location)
-                    print self.app_strings['stored']
-
-                elif action == 224:
-                    for key in bucket.list_objects():
-                        if key.name == file_title:
-                            print "Downloading to res/\n"
-                            key.download('res/' + key.name)
-                            print self.app_strings['downloaded']
-
+                # 223, 224, 225 Upload / Download / Delete an object
                 else:
-                    for key in bucket.list_objects():
-                        if key.name == file_title:
-                            key.delete()
-                            print self.app_strings['removed']
+                    # Retrieve the correct bucket from the list
+                    bucket = buckets[bucket_num - 1]
+
+                    # Ask for the identifier of the file and depending on the action upload/download/delete it
+                    print "Type the identifier of the file"
+                    file_title = self.ask_string()
+
+                    # 223 Upload an object
+                    if action == 223:
+                        # Asl for the location of the file to upload
+                        print "Type the location of the file"
+                        file_location = self.ask_custom_string("Type location: ")
+
+                        # Save in the bucket the file on the desired location with the desired name
+                        S3BucketOS.store_in_bucket(bucket, file_title, file_location)
+                        print self.app_strings['stored']
+
+                    # 224, 225 Download/Delete an object
+                    else:
+                        # Iterate over all the objects in the bucket looking for a name/title match
+                        for key in bucket.list_objects():
+                            if key.name == file_title:
+
+                                # 224 Download an object
+                                if action == 224:
+                                    # Download the object on the resources folder and notify the user
+                                    print "Downloading to res/\n"
+                                    key.download('res/' + key.name)
+                                    print self.app_strings['downloaded']
+
+                                # 225 Delete an object
+                                else:
+                                    # Delete the object from the bucket and notify the user
+                                    key.delete()
+                                    print self.app_strings['removed']
+
+            # If there are no buckets, warn the user
             else:
                 print self.app_strings['no_found']
 
-        # Performance metrics for a EC2 instance - Activate monitoring
+        # Performance metrics for a EC2 instance - Activate monitoring / Query an instance / Setup alarm
         elif action == 311 or action == 312 or action == 32:
             # Start a EC2 connection
             conn_ec2 = Connection.ec2_connection()
@@ -633,9 +678,11 @@ class Application:
             # Retrieve all actives
             instances = EC2Instance.find_instances_running(conn_ec2)
 
-            # If none, exit
+            # If no instances are found, exit
             if not instances:
                 print self.app_strings['no_running']
+
+            # If there are instances
             else:
                 # Show index and id for the user to select the desired ones
                 print "Running AWS EC2 instances:\n"
@@ -646,16 +693,24 @@ class Application:
                 print "\nType the number of the id"
                 index = self.ask_option(len(instances))
 
+                # Retrieve the instance from the list
                 instance = instances[index-1]
 
+                # 311 Activate monitoring
                 if action == 311:
                     CloudWatch.enable_cw_on_instance(conn_ec2, str(instance.id))
+
+                # 312 Get metrics
                 elif action == 312:
                     # New CW connection
                     conn_cw = Connection.cw_connection()
 
+                    # Query the CloudWatch metrics by the instance id
                     CloudWatch.query_cw_by_instance_id(str(instance.id), conn_cw)
+
+                # 32 Create an alarm
                 else:
+                    # Retrieve the necessary fields for the alarm creation (offering clues to guide the user)
                     print "Type a short but meaningful name for your alarm."
                     alarm_name = self.ask_custom_string("Type name: ")
 
@@ -687,10 +742,12 @@ class Application:
                     print "SampleCount | Average | Sum | Minimum | Maximum"
                     statistics = self.ask_custom_string("Type statistic: ")
 
-                    # Create the alarm
+                    # Create the alarm with the fields the user introduced
                     print self.app_strings['creating_alarm']
                     success = CloudWatch.create_cw_alarm(instance.id, alarm_name, email_address, metric_name,
                                                          comparison, threshold, period, eval_periods, statistics)
+
+                    # Notify the user of the result of the operation
                     if success:
                         print self.app_strings['created_alarm']
                     else:
@@ -698,47 +755,67 @@ class Application:
 
         # AWS - List all Glacier Vaults
         elif action == 411:
+
+            # Start a Glacier connection
             conn_glacier = Connection.glacier_connection()
 
+            # Retrieve all the vaults for the account
             vaults = GlacierVaults.list_vaults(conn_glacier)
 
+            # If there are vaults, show them formatted with the required fields
             if vaults:
                 print "Active Vaults:"
                 for index, vault in enumerate(vaults, 1):
                     print '\t' + str(index) + ':', 'Name:', vault.name, 'Size:', vault.size,\
                         'Created in:', vault.creation_date
+
+            # If there aren't, notify the user
             else:
                 print self.app_strings['no_found']
 
         # AWS - Create / Delete a Glacier Vault
         elif action == 412 or action == 413:
+            # Start a Glacier connection
             conn_glacier = Connection.glacier_connection()
 
+            # Ask the user for the name of the vault
             name = self.ask_custom_string("Type vault name: ")
 
+            # 412 Create a Glacier Vault
             if action == 412:
+
+                # Create a vault wih the provided name (duplication is ignored by AWS, no need to control it)
                 GlacierVaults.create_vault(conn_glacier, name)
                 print self.app_strings['created_glacier']
+
+            # 413 Delete a Glacier Vault
             else:
+                # Delete the vault from AWS (non-existent vault names are ignored by AWS, no need to control it)
                 GlacierVaults.delete_vault(conn_glacier, name)
                 print self.app_strings['deleted_glacier']
 
         # AWS - Auto Scale - Test connection
         elif action == 421:
-            print "Testing connection:"
 
+            # Test the connection with AutoScale by printing it
+            print "Testing connection:"
             print '\n\t', Connection.as_connection()
 
         # AWS - Auto Scale - Create Auto Scaling Group
         elif action == 422:
+
+            # Create an AutoScaling connection
             conn_as = Connection.as_connection()
 
+            # Ask for the required fields for creation
             launch_config_name = self.ask_custom_string("Type Launch Configuration name: ")
             as_group_name = self.ask_custom_string("Type Auto Scaling group name: ")
 
+            # Ask for min and max limits for the instances in the group
             min_inst = self.ask_custom_int("Type min instances (min 0, max 20)", 0, 20)
             max_inst = self.ask_custom_int("Type max instances (min " + str(min_inst) + " max 40)", min_inst, 40)
 
+            # Create the Launch Configuration and the Auto Scaling Group, notify the user of the result
             success = AutoScale.create_as_group(conn_as, launch_config_name, as_group_name, min_inst, max_inst)
             if success:
                 print self.app_strings['created_group']
@@ -746,28 +823,35 @@ class Application:
         # AWS - Auto Scale - Delete Auto Scaling Group
         elif action == 423:
 
+            # Create an AutoScaling connection
             conn_as = Connection.as_connection()
+
+            # Ask for an existing
             launch_config_name = self.ask_custom_string("Type Launch Configuration name: ")
             as_group_name = self.ask_custom_string("Type Auto Scaling group name: ")
 
+            # Try to delete the Launch Configuration and the Auto Scaling Group, notify the user of the result
             success = AutoScale.delete_as_group(conn_as, as_group_name, launch_config_name)
             if success:
                 print self.app_strings['deleted_group']
 
         # AWS - Auto Scale - Create policies
         elif action == 424:
+
+            # Create an AutoScaling connection
             conn_as = Connection.as_connection()
 
+            # Ask for the Group name to create the policies, the method will handle the exceptions
             as_group_name = self.ask_custom_string("Type Auto Scaling group name: ")
             AutoScale.create_scale_policies(conn_as, as_group_name)
 
-            print 'Policies', 'scale_up', 'and', 'scale_down', 'created'
-
         # AWS - Auto Scale - Create alarm
         elif action == 425:
+            # Create both AutoScaling and CloudWatch connections
             conn_as = Connection.as_connection()
             conn_cw = Connection.cw_connection()
 
+            # Ask for the necessary fields for the alarm creation (offering clues for the user to follow)
             print "Type the Auto Scaling group name to set the alarm on"
             as_group_name = self.ask_custom_string("Type Auto Scaling group name: ")
 
@@ -803,6 +887,7 @@ class Application:
             print "SampleCount | Average | Sum | Minimum | Maximum"
             statistics = self.ask_custom_string("Type statistic: ")
 
+            # Try to create the alarm and notify the user of the result
             print self.app_strings['creating_alarm']
             success = AutoScale.create_scale_alarm(conn_as, conn_cw, as_group_name, alarm_name, scaling_policy_name,
                                                    metric_name, comparison, threshold, period, eval_periods, statistics)
@@ -813,8 +898,10 @@ class Application:
         elif action == 43:
             print self.app_strings['terminating']
 
-            # Start a EC2 connection
+            # Start EC2, AutoScaling and Glacier connections
             conn_ec2 = Connection.ec2_connection()
+            conn_as = Connection.as_connection()
+            conn_glacier = Connection.glacier_connection()
 
             # Terminate all instances
             print "\nTerminating instances:\n"
@@ -828,17 +915,15 @@ class Application:
 
             # Terminate all vaults
             print "\nTerminating vaults:\n"
-            conn_glacier = Connection.glacier_connection()
             GlacierVaults.terminate_all_vaults(conn_glacier)
             print "\tTerminated"
 
             # Terminate all groups, launch configuration and policies
             print "\nTerminating groups, launch configuration and policies:\n"
-            conn_as = Connection.as_connection()
             AutoScale.delete_everything(conn_as)
             print "\tTerminated"
 
-            # Redirect to check, just in case
+            # Redirect to AWS web page to check manually, just in case
             print "\nRedirecting to amazon in 5 seconds, check manually!"
             sleep(5)
             webbrowser.open('https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#')
@@ -849,7 +934,7 @@ class Application:
             webbrowser.open(
                 'eu-west-1.console.aws.amazon.com/ec2/autoscaling/home?region=eu-west-1#AutoScalingGroups:view=details')
 
-        # The action has been completed
+        # Notify the user the action has been completed
         print self.app_strings['completed']
 
         # Restart the interface unless you are terminating all AWS instances/volumes/etc
