@@ -1,4 +1,5 @@
 from boto import exception
+from boto import config
 
 
 class EC2Instance:
@@ -60,13 +61,13 @@ class EC2Instance:
     def create_instance(conn):
         """ Create a new instance """
 
-        conn.run_instances("ami-c6972fb5", key_name="rsd_raul_cit_aws_key", instance_type="t2.micro")
+        conn.run_instances("ami-c6972fb5", key_name=config.get('Credentials', 'key_name'), instance_type="t2.micro")
 
     @staticmethod
     def create_instance_with_ami(conn, ami):
         """ Create a new instance based on AMI"""
 
-        conn.run_instances(ami, key_name="rsd_raul_cit_aws_key", instance_type="t2.micro")
+        conn.run_instances(ami, key_name=config.get('Credentials', 'key_name'), instance_type="t2.micro")
 
     @staticmethod
     def create_instance_with_so(conn, so):
@@ -75,7 +76,7 @@ class EC2Instance:
         # Select the AMI corresponding with Windows or Linux depending on the user
         ami = "ami-c6972fb5" if so == "windows" else "ami-f95ef58a"
 
-        conn.run_instances(ami, key_name="rsd_raul_cit_aws_key", instance_type="t2.micro")
+        conn.run_instances(ami, key_name=config.get('Credentials', 'key_name'), instance_type="t2.micro")
 
     @staticmethod
     def start_instance(conn, instance_id):

@@ -26,6 +26,7 @@ Setup:
             [Credentials]
             aws_access_key_id = <YOUR KEY ID>
             aws_secret_access_key = <YOUR ACCESS KEY>
+            key_name = rsd_raul_cit_aws_key
             region = eu-west-1
 
             [Boto]
