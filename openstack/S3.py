@@ -8,6 +8,7 @@ class S3BucketOS:
 
     @staticmethod
     def list_buckets():
+        """ List S3 buckets """
 
         libcloud.security.VERIFY_SSL_CERT = False
 
@@ -17,7 +18,7 @@ class S3BucketOS:
         # OpenStack S3 Driver
         driver = Connection.s3_os_driver()
 
-        """ List S3 buckets """
+        # Retrieve all S3 buckets and return them
         buckets = driver.list_containers()
 
         return buckets
@@ -26,4 +27,5 @@ class S3BucketOS:
     def store_in_bucket(bucket, file_title, file_location):
         """ Store a file inside a Bucket """
 
+        # Store a file inside the provided bucket with the provided name
         bucket.upload_object(file_location, file_title)

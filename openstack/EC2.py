@@ -24,6 +24,7 @@ class EC2InstanceOS:
         # Get all instances associated with this AWS account
         nodes = driver.list_nodes()
 
+        # Iterate over them and return the running instances
         result = []
         for node in nodes:
             if node.state == NodeState.RUNNING:
