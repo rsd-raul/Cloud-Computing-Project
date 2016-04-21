@@ -14,6 +14,7 @@ print "\tBoto"
 print '\t\t', config.get('Boto', 'cloudwatch_region_name')
 print '\t\t', config.get('Boto', 'cloudwatch_region_endpoint')
 print '\t\t', config.get('Boto', 'autoscale_endpoint')
+print '\t\t', config.get('Boto', 'sns_endpoint')
 
 print "\tLibCloud"
 print '\t\t', config.get('LibCloud', 'username')

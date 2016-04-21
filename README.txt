@@ -33,6 +33,7 @@ Setup:
             cloudwatch_region_name = eu-west-1
             cloudwatch_region_endpoint = monitoring.eu-west-1.amazonaws.com
             autoscale_endpoint = autoscaling.eu-west-1.amazonaws.com
+            sns_endpoint = sns.eu-west-1.amazonaws.com
 
             [LibCloud]
             username = <YOUR USERNAME>

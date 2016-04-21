@@ -1,4 +1,3 @@
-import boto
 import boto.ec2
 import boto.glacier
 from boto import config
@@ -15,7 +14,7 @@ class Connection:
     @staticmethod
     def ec2_connection():
         """ Create and return an EC2 Connection """
-        conn = boto.ec2.connect_to_region('eu-west-1')
+        conn = boto.ec2.connect_to_region(config.get('Credentials', 'region'))
         return conn
 
     @staticmethod
@@ -38,10 +37,12 @@ class Connection:
         key_id = config.get('Credentials', 'aws_access_key_id')
         access_key = config.get('Credentials', 'aws_secret_access_key')
 
-        # Undocumented way to connect SNS to a different zone... Appears to work
-        region_name = 'eu-west-1'
-        region_endpoint = 'sns.eu-west-1.amazonaws.com'
+        # Undocumented way to connect SNS to a different zone... Create a SDBRegionInfo
+        region_name = config.get('Credentials', 'region')
+        region_endpoint = config.get('Boto', 'sns_endpoint')
         region = SDBRegionInfo(None, region_name, region_endpoint)
+
+        # Build the connection using the keys and the new region
         conn = boto.connect_sns(key_id, access_key, region=region)
 
         return conn
@@ -50,12 +51,13 @@ class Connection:
     def glacier_connection():
         """ Create and return a Glacier Connection """
 
-        conn = boto.glacier.connect_to_region('eu-west-1')
+        conn = boto.glacier.connect_to_region(config.get('Credentials', 'region'))
 
         return conn
 
     @staticmethod
     def as_connection():
+        """ Create and return an Auto Scale Connection """
 
         key_id = config.get('Credentials', 'aws_access_key_id')
         access_key = config.get('Credentials', 'aws_secret_access_key')

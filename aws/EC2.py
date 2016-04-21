@@ -14,6 +14,7 @@ class EC2Instance:
         # Get all instance reservations associated with this AWS account
         reservations = conn.get_all_reservations()
 
+        # Iterate over all the instances inside all the reservations and return the ones running
         result = []
         for res in reservations:
             for instance in res.instances:
@@ -26,6 +27,7 @@ class EC2Instance:
     def find_instances_running_zone(conn, zone):
         """ Find EC2 Instances """
 
+        # Iterate over all the instances inside all the reservations and return the ones running in the requested zone
         result = []
         for res in conn.get_all_reservations():
             for instance in res.instances:
@@ -35,38 +37,10 @@ class EC2Instance:
         return result
 
     @staticmethod
-    def list_instances(conn):
-        """ List EC2 Instances """
-
-        # Get all instance reservations associated with this AWS account
-        reservations = conn.get_all_reservations()
-
-        # Loop through reservations and extract instance information
-        for res in reservations:
-
-            # Loop through the reservation instances and print instance information
-            for instance in res.instances:
-                # Get instance name from the tags object
-                tags = instance.tags
-
-                # Check for 'Name' property in tags object, if it doesn't exist, use the default
-                instance_name = tags['Name'] if 'Name' in tags else 'Default EC2 Instance Name'
-
-                # Print instance information
-                print 'Instance Name:', instance_name, ' Instance Id:', instance.id, ' State:', instance.state,\
-                    ' Launch Time:', instance.launch_time, ' IP address:', instance.private_ip_address,\
-                    ' Private IP address:', instance.ip_address
-
-    @staticmethod
-    def create_instance(conn):
-        """ Create a new instance """
-
-        conn.run_instances("ami-c6972fb5", key_name=config.get('Credentials', 'key_name'), instance_type="t2.micro")
-
-    @staticmethod
     def create_instance_with_ami(conn, ami):
         """ Create a new instance based on AMI"""
 
+        # Start an instance with the desired ami, in this case I decided to hard code the type to a free tier machine
         conn.run_instances(ami, key_name=config.get('Credentials', 'key_name'), instance_type="t2.micro")
 
     @staticmethod
@@ -76,6 +50,7 @@ class EC2Instance:
         # Select the AMI corresponding with Windows or Linux depending on the user
         ami = "ami-c6972fb5" if so == "windows" else "ami-f95ef58a"
 
+        # Start an instance with the calculated ami, in this case I decided to hard code the type to a free tier machine
         conn.run_instances(ami, key_name=config.get('Credentials', 'key_name'), instance_type="t2.micro")
 
     @staticmethod
@@ -91,21 +66,27 @@ class EC2Instance:
         # From all the running instances, extract the id and make a list
         instances_ids = [instance.id for instance in EC2Instance.find_instances_running(conn)]
 
-        for instance_id in instances_ids:
-            print "Stopping instance with id:", instance_id
+        # If 1 or more instances are running, notify the user and stop them all
+        if len(instances_ids) > 0:
+            for instance_id in instances_ids:
+                print "Stopping instance with id:", instance_id
 
-        # Stop all the running instances
-        conn.stop_instances(instances_ids, False)
+            # Stop all the running instances
+            conn.stop_instances(instances_ids, False)
+
+        # If there is nothing running, warn the user
+        else:
+            print "Nothing running"
 
     @staticmethod
     def stop_instance(conn, instance_id):
         """ Stops a running instance"""
 
+        # Stop the instance the user requested and notify the user of the result
         try:
             stopped = conn.stop_instances(instance_id, False)
+            print "Stopping instance with id:", stopped[0].id
 
-            for instance in stopped:
-                print "Stopping instance with id:", instance.id
         except exception.EC2ResponseError:
             print "Incorrect id format, try again"
 
@@ -113,12 +94,14 @@ class EC2Instance:
     def terminate_instance(conn, instance_id):
         """ Terminate a running or stopped instance"""
 
+        # Terminate an instance based on a user provided id
         conn.terminate_instances(instance_id)
 
     @staticmethod
     def terminate_all_instances(conn):
         """ Terminate all instances"""
 
+        # Retrieve all the ids for the running instances from all the reservations
         not_terminated = []
         for reservation in conn.get_all_instances():
             for inst in reservation.instances:
@@ -126,6 +109,7 @@ class EC2Instance:
                 if inst.state != u'terminated':
                     not_terminated.append(inst.id)
 
+        # If there are running instances, terminate them, if not, notify the user
         if len(not_terminated) > 0:
             print "\nTerminating instances ", not_terminated
             conn.terminate_instances(instance_ids=not_terminated)

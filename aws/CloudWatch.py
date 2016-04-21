@@ -10,48 +10,52 @@ class CloudWatch:
     def enable_cw_all(conn_ec2):
         """Enable CloudWatch monitoring on all running instances."""
 
-        list_inst_ids = []                                          # Create list of instance IDs
-        reservations = conn_ec2.get_all_instances()                 # Get information on currently running instances
-        instances = [i for r in reservations for i in r.instances]  # Create list of instances
-        for instance in instances:                                  # For loop checks for instance in list of instances
-            if instance.state == u'running':                        # If instance state is equals to running
-                list_inst_ids.append(instance.id)                   # Append instance ID to the list of instance IDs
+        # Get all the reservations
+        reservations = conn_ec2.get_all_instances()
 
+        # Retrieve all the instances for all the reservations
+        instances = [i for r in reservations for i in r.instances]
+
+        # Iterate over all the instances and save the id of those who are running
+        list_inst_ids = []
+        for instance in instances:
+            if instance.state == u'running':
+                list_inst_ids.append(instance.id)
+
+        # If there are instances running, activate monitoring for each one of them by passing the full id list
         if list_inst_ids:
             inst_mon = conn_ec2.monitor_instances(list_inst_ids)
             print "Monitoring the instances: ", inst_mon
+
+        # If there aren't, notify the user
         else:
             print "No instances to monitor"
 
     @staticmethod
     def enable_cw_on_instance(conn_ec2, instance_id):
-        """Enable CloudWatch monitoring a running instance."""
+        """Enable CloudWatch monitoring on a running instance."""
 
         found = False
-        # reservations = conn.get_all_instances()                     # Get information on currently running instances
-        # instances = [i for r in reservations for i in r.instances]  # Create list of instances
+
+        # Retrieve all the instances for all the reservations and find the desired one by id (must also be running)
         for reservation in conn_ec2.get_all_instances():
             for instance in reservation.instances:
                 if instance.id == instance_id and instance.state == u'running':
                     found = True
 
+        # If found, activate the monitoring for the instance
         if found:
             inst_mon = conn_ec2.monitor_instances(instance_id)
             print "Monitoring the instance: ", inst_mon
+        # Otherwise, notify the user
         else:
             print "No instances to monitor"
 
     @staticmethod
     def query_cw_by_instance_id(instance_id, conn_cw):
         """ Query CloudWatch for data about your instance"""
-        # metrics = conn_cw.list_metrics()
-        # my_metrics = []
-        # for metric in metrics:
-        #     if u'InstanceID' in metric.dimensions:
-        #         if instance_id in metric.dimensions['InstanceId']:
-        #             print "Instance metric found"
-        #             my_metrics.append(metric)
 
+        # Request the metrics for the desired instance
         my_metrics = conn_cw.list_metrics(dimensions={'InstanceId': instance_id})
 
         print my_metrics
@@ -59,6 +63,7 @@ class CloudWatch:
     @staticmethod
     def create_cw_alarm(instance_id, alarm_name, email_address, metric_name, comparison, threshold, period,
                         eval_periods, statistics):
+        """ Create an alarm to email the user in case the conditions set by him are met """
 
         print "Starting alarm creation process\n"
 
@@ -73,13 +78,15 @@ class CloudWatch:
             print 'Unable to find instance:', instance_id
             return False
 
+        # As the instance id is unique, the rs list will contain only one instance
         instance = rs[0].instances[0]
         instance.monitor()
 
-        # Create the SNS Topic
+        # Build the name and start the topic creation process
         topic_name = 'CWAlarm-%s' % alarm_name
         print 'Creating SNS topic: %s' % topic_name
 
+        # Create the SNS Topic and recover the necessary parameters from the response
         response = conn_sns.create_topic(topic_name)
         topic_arn = response['CreateTopicResponse']['CreateTopicResult']['TopicArn']
         print 'Topic ARN: %s' % topic_arn
@@ -88,14 +95,16 @@ class CloudWatch:
         print 'Subscribing %s to Topic %s' % (email_address, topic_arn)
         conn_sns.subscribe(topic_arn, 'email', email_address)
 
-        # Now find the Metric we want to be notified about
+        # We find the Metric we want to be notified about
         metric = conn_cw.list_metrics(dimensions={'InstanceId': instance_id}, metric_name=metric_name)[0]
         print 'Found: %s' % metric
 
-        # Now create Alarm for the metric
+        # And then create Alarm for the metric
         print '\nFinalizing creation (hold)'
         alarm = metric.create_alarm(alarm_name, comparison, threshold, period, eval_periods, statistics,
                                     alarm_actions=[topic_arn], ok_actions=[topic_arn])
+
+        # Control the result of the creation for the app to react accordingly
         if alarm:
             return True
         else:
