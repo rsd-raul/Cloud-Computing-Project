@@ -392,7 +392,7 @@ class Application:
                 print self.app_strings['no_running']
             else:
                 # Format and print the retrieved instances
-                print "\nRunning AWS EC2 nodes"
+                print "\nRunning OS EC2 nodes"
                 for index, node in enumerate(nodes):
                     # This method will print the requested attributes from each of the nodes (instances)
                     self.print_node(index, node)
@@ -436,12 +436,16 @@ class Application:
                 bucket_objects = buckets[bucket_num - 1].list()
 
                 # If the bucket have object, print them (their name)
-                if bucket_objects:
-                    print "The objects in the bucket are:"
-                    for bucket_object in bucket_objects:
-                        print '\t' + str(bucket_object.key)
+                success = False
+
+                for bucket_object in bucket_objects:
+                    if not success:
+                        print "The objects in the bucket are:"
+                        success = True
+                    print '\t' + str(bucket_object.key)
                 # If no objects are found, notify the user
-                else:
+
+                if not success:
                     print self.app_strings['no_found']
 
             # If no buckets are found, notify the user
@@ -468,14 +472,18 @@ class Application:
                     if bucket.name == bucket_name:
                         success = True
 
-                        # If the bucket is found retrieve its files and print them (Their name
+                        # If the bucket is found retrieve its files and print them (Their names)
                         bucket_objects = bucket.list()
-                        print "The objects in the bucket are:"
+                        objects = False
+
                         for bucket_object in bucket_objects:
+                            if not objects:
+                                print "The objects in the bucket are:"
+                                objects = True
                             print '\t' + str(bucket_object.key)
 
                         # If there are no files, warn the user
-                        if not bucket_objects:
+                        if not objects:
                             print self.app_strings['no_found']
 
                         # As the bucket name must be unique, break from the loop
@@ -516,7 +524,7 @@ class Application:
                 # 213 Upload an object
                 if action == 213:
                     # Ask for the location of the file to upload
-                    print "Type the location of the file (e.g. res/test.txt"
+                    print "Type the location of the file (e.g. res/text.txt)"
                     file_location = self.ask_custom_string("Type location: ")
 
                     # Store in the bucket the file with the title provided and from the location given
@@ -581,13 +589,15 @@ class Application:
                         bucket_objects = bucket.list_objects()
 
                         # If there are files, list them with a customized format
-                        if bucket_objects:
-                            print "The objects in the bucket are:"
-                            for bucket_object in bucket_objects:
-                                print '\t' + bucket_object.name
+                        objects = False
+                        for bucket_object in bucket_objects:
+                            if not objects:
+                                print "The objects in the bucket are:"
+                                objects = True
+                            print '\t' + bucket_object.name
 
                         # If there are no files, warn the user
-                        else:
+                        if not objects:
                             print self.app_strings['no_found']
 
                 # If there is no bucket with that name, warn the user
@@ -644,8 +654,9 @@ class Application:
                         file_location = self.ask_custom_string("Type location: ")
 
                         # Save in the bucket the file on the desired location with the desired name
-                        S3BucketOS.store_in_bucket(bucket, file_title, file_location)
-                        print self.app_strings['stored']
+                        success = S3BucketOS.store_in_bucket(bucket, file_title, file_location)
+                        if success:
+                            print self.app_strings['stored']
 
                     # 224, 225 Download/Delete an object
                     else:
@@ -942,7 +953,7 @@ class Application:
         print self.app_strings['completed']
 
         # Restart the previous menu unless you are terminating all AWS instances/volumes/etc
-        if action != 42:
+        if action != 43:
             print self.app_strings['restart']
             self.process_selection(action // 10)
         else:

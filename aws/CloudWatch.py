@@ -1,4 +1,5 @@
 from Connections import Connection
+import datetime
 
 
 class CloudWatch:
@@ -58,7 +59,17 @@ class CloudWatch:
         # Request the metrics for the desired instance
         my_metrics = conn_cw.list_metrics(dimensions={'InstanceId': instance_id})
 
+        print "All this metrics can be obtained:"
         print my_metrics
+
+        # Also, you can request the data with a time frame and for a specific statistic
+        print "Some of them are:"
+        for stat in ["DiskReadBytes", "DiskWriteBytes", "DiskReadOps", "DiskWriteOps", "CPUUtilization"]:
+            print "\n" + stat + ":"
+            st = conn_cw.get_metric_statistics(300, datetime.datetime.utcnow() - datetime.timedelta(seconds=600),
+                                               datetime.datetime.utcnow(), stat, 'AWS/EC2', 'Average',
+                                               dimensions={'InstanceId': [instance_id]})
+            print st
 
     @staticmethod
     def create_cw_alarm(instance_id, alarm_name, email_address, metric_name, comparison, threshold, period,

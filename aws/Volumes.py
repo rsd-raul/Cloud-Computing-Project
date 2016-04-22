@@ -105,8 +105,8 @@ class Volumes:
         """ Creating a new volume """
 
         try:
-            # Create a 30gb volume of type gp2 with the region eu-west-1c
-            conn.create_volume(30, config.get('Credentials', 'region')+"c", None, "gp2")
+            # Create a 30gb volume of type gp2 with the region eu-west-1a
+            conn.create_volume(30, config.get('Credentials', 'region')+"a", None, "gp2")
             return True
 
         # If problems arise, warn the user

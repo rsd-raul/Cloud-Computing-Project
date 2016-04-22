@@ -27,5 +27,10 @@ class S3BucketOS:
     def store_in_bucket(bucket, file_title, file_location):
         """ Store a file inside a Bucket """
 
-        # Store a file inside the provided bucket with the provided name
-        bucket.upload_object(file_location, file_title)
+        try:
+            # Store a file inside the provided bucket with the provided name
+            bucket.upload_object(file_location, file_title)
+            return True
+        except OSError:
+            print "The file does not exist"
+            return False

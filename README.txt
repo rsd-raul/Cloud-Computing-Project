@@ -53,8 +53,8 @@ Menus & actions:
         1	AWS
             1	List all running instances
             2	List some of the running instances
-                1X 	Choose from list
-                2X 	Enter an instance ID
+                1 	Choose from list
+                2 	Enter an instance ID
             3	Start a new instance based on an existing AMI
             4	Stop all instances
             5	Stop a specific instance
@@ -105,6 +105,10 @@ Menus & actions:
         3   Terminate *warning
 
 Disclaimer:
+
+    To maintain the method count as small as possible and at the same time to avoid code duplication, the
+    method apply_action will not be split down in small parts, while I understand the elevated number of
+    lines, I think it will be much worse to isolate each and every one of the methods in its of function.
 
     This project is based and tested against AWS eu-west-1 regions, while other regions are very likely
     to behave correctly, this is not warranted or directly supported by the developer.

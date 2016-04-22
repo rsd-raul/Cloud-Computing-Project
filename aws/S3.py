@@ -45,6 +45,9 @@ class S3Bucket:
         except OSError:
             print "The file does not exist"
             return False
+        except IOError:
+            print "No such file or directory"
+            return False
 
     @staticmethod
     def delete_from_bucket(bucket, file_title):
